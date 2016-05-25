@@ -144,10 +144,6 @@ int _tmain(INT argc, LPTSTR argv [])
 	    n--;
 	}	
 	_tprintf(_T("\n************2Main thread waking up !!!\n"));
-
-	/*----------close all handles-------------*/
-	//for(i=0;i<thAmount;i++)
-	//CloseHandle(Handle_Copy[i]);
 		
 		/*-----------merge two arrays---------*/
 	mergeArray(array_full,count,th[y].number,th[y].i);
