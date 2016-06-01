@@ -130,11 +130,11 @@ int _tmain (int argc, LPTSTR argv [])
 	for(i=0;i<argc-1;i++){
 		re = WaitForSingleObject(
 			ThreadHandle[i],
-			0
+			2
 			);
 		if(re == WAIT_OBJECT_0)
 		{
-			_tprintf(_T("Thread %d finished!\n"),thread_c.th[i].thId);
+			_tprintf(_T("\nThread %d finished!\n"),thread_c.th[i].thId);
 			break;
 		}
 		else{
@@ -189,7 +189,7 @@ DWORD WINAPI  TraverseDirectoryRecursive (LPVOID para)
 	
 	par1=SearchPath;
 	_stprintf(SearchPath,_T("%s\\*"),th->path);
-	_tprintf(_T("SearchPath is %s\n"),SearchPath);
+	_tprintf(_T("%d SearchPath is %s\n"),th->thId,SearchPath);
 	par1=SearchPath;
 	SearchHandle = FindFirstFile(SearchPath,&FindData);
 	if(SearchHandle==INVALID_HANDLE_VALUE)
@@ -265,6 +265,8 @@ DWORD WINAPI  TraverseDirectoryRecursive (LPVOID para)
 			//SetCurrentDirectory(fullNewPath);
 			//SetCurrentDirectory(current_dire);//???
 			//how to go upper layer
+			//---------to return to upper layer---------
+			_tcscpy(th->path,par1);
 		}
 		
 	} while (FindNextFile(SearchHandle,&FindData));
