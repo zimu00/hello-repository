@@ -17,6 +17,7 @@
 
 #define MAX_SEM_COUNT 10
 #define MAX_TH_COUNT 10
+#define TIMEOUT 5000
 
 HANDLE Semaphore;
 HANDLE cSemaphore;
@@ -108,7 +109,7 @@ int _tmain (int argc, LPTSTR argv [])
 		_tprintf(_T("error in waiting %d threads!\n"),argc-1);
 	}*/
 	//check the termination of thread
-	DWORD re;
+	/*DWORD re;
 	for(i=0;i<argc-1;i++){
 		re = WaitForSingleObject(
 			ThreadHandle[i],
@@ -123,6 +124,12 @@ int _tmain (int argc, LPTSTR argv [])
 			if(i=argc-1)
 				i=0;
 		}
+	}*/
+	DWORD re = WaitForMultipleObjects(1,ThreadHandle,FALSE,INFINITE);
+	if(re>=WAIT_OBJECT_0 && re<=(WAIT_OBJECT_0+argc-2))
+		_tprintf(_T(" thread %d read finish!\n"),re-WAIT_OBJECT_0);
+	else {
+		_tprintf(_T("error in waiting %d threads!\n"),argc-1);
 	}
 
 	if(thread_c.equal==1)
@@ -130,8 +137,12 @@ int _tmain (int argc, LPTSTR argv [])
 		_tprintf(_T("\n---not all threads are equal,all exit!!!----\n"));
 	}
 	else
-		_tprintf(_T("\n----all threads read same content----\n"));
-	
+	{
+		if(thread_c.equal==2)
+			_tprintf(_T("\n----all threads read same content----\n"));
+		else
+			_tprintf(_T("\n---not all threads are equal,all exit!!!----\n"));
+	}
 	CloseHandle(cSemaphore);
 	CloseHandle(Semaphore);
 	for(i=0;i<argc;i++)
@@ -180,12 +191,18 @@ DWORD WINAPI  TraverseDirectoryRecursive (LPVOID para)
 			}
 			dwWaitResult = WaitForSingleObject(
 				cSemaphore,
-				INFINITE
+				TIMEOUT
 				);
 			if(dwWaitResult==WAIT_OBJECT_0)
 				_tprintf(_T("%d has got semaphore successfully\n"),th->thId);
-			else
+			else{
+				if(dwWaitResult==WAIT_TIMEOUT){
+					_tprintf(_T("%d didn't get semaphore out of time\n"),th->thId);
+					ExitThread(NULL);
+				}
+				else
 				_tprintf(_T("%d didn't get semaphore successfully\n"),th->thId);
+			}
 		
 		}
 		if(FType == TYPE_DIR){
@@ -204,12 +221,18 @@ DWORD WINAPI  TraverseDirectoryRecursive (LPVOID para)
 			}
 			dwWaitResult = WaitForSingleObject(
 				cSemaphore,
-				INFINITE
+				TIMEOUT
 				);
 			if(dwWaitResult==WAIT_OBJECT_0)
 				_tprintf(_T("%d has got semaphore successfully\n"),th->thId);
-			else
+			else{
+				if(dwWaitResult==WAIT_TIMEOUT){
+					_tprintf(_T("%d didn't get semaphore out of time\n"),th->thId);
+					ExitThread(NULL);
+				}
+				else
 				_tprintf(_T("%d didn't get semaphore successfully\n"),th->thId);
+			}
 			_stprintf(th->path,_T("%s\\%s"),th->path,FindData.cFileName);
 			_tprintf(_T("the new path is %s\n"),th->path);
 			TraverseDirectoryRecursive(th);
@@ -223,7 +246,7 @@ DWORD WINAPI  TraverseDirectoryRecursive (LPVOID para)
 	} while (FindNextFile(SearchHandle,&FindData));
 	
 	FindClose(SearchHandle);
-
+	_tprintf(_T("%d finishes\n"),th->thId);
 	return 0;
 }
 
