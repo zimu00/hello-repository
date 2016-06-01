@@ -36,6 +36,7 @@ typedef struct Threads_cc
 	
 	DWORD nCount;
 	//Threads_t th[MAX_SEM_COUNT];
+	HANDLE threadh[MAX_SEM_COUNT];
 	Threads_t *th;
 	boolean equal;
 }Threads_c;
@@ -109,18 +110,42 @@ int _tmain (int argc, LPTSTR argv [])
 		ThreadHandle[i] = CreateThread(
 			0,0,(LPTHREAD_START_ROUTINE)TraverseDirectoryRecursive,(PVOID)thread[i],0,&thread[i]->thId);
 		//thread_c.th[i] = *thread[i];????
+		thread_c.threadh[i]=ThreadHandle[i];
 	}
 	//ThreadHandle[i] = CreateThread(
 		//0,0,(LPTHREAD_START_ROUTINE)Compare,(PVOID)&thread_c,0,&thread_c.thId);
 	ThreadHandle[i] = CreateThread(
 		0,0,(LPTHREAD_START_ROUTINE)Compare,NULL,0,&thread_c.thId);
 
-
-	DWORD re = WaitForMultipleObjects(argc-1,ThreadHandle,TRUE,INFINITE);
+	//don't use waitForMultiple cz maybe 1st thread read a shorter directory tree,then finish
+	//but others go on releasing semaphores and waiting
+	/*DWORD re = WaitForMultipleObjects(argc-1,ThreadHandle,TRUE,INFINITE);
 	if(re>=WAIT_OBJECT_0 && re<=(WAIT_OBJECT_0+argc-2))
 	_tprintf(_T("all %d threads read finish!\n"),argc-1);
 	else {
 		_tprintf(_T("error in waiting %d threads!\n"),argc-1);
+	}*/
+	//check the termination of thread
+	DWORD re;
+	for(i=0;i<argc-1;i++){
+		re = WaitForSingleObject(
+			ThreadHandle[i],
+			0
+			);
+		if(re == WAIT_OBJECT_0)
+		{
+			_tprintf(_T("Thread %d finished!\n"),thread_c.th[i].thId);
+			break;
+		}
+		else{
+			if(i=argc-1)
+				i=0;
+		}
+	}
+
+	if(thread_c.equal==1)
+	{
+		_tprintf(_T("\n---not all threads are equal,all exit!!!----\n"));
 	}
 
 	//inform the comparison thread
@@ -198,10 +223,11 @@ DWORD WINAPI  TraverseDirectoryRecursive (LPVOID para)
 				_tprintf(_T("%d has got semaphore successfully\n"),th->thId);
 			else
 				_tprintf(_T("%d didn't get semaphore successfully\n"),th->thId);
-			if(th->equal==1){
+			/*if(th->equal==1){
 				_tprintf(_T("not equal,so %d exit\n"),th->thId);
+				ExitThread(NULL);
 				return 2;
-			}
+			}*/
 		
 		}
 		if(FType == TYPE_DIR){
@@ -227,10 +253,11 @@ DWORD WINAPI  TraverseDirectoryRecursive (LPVOID para)
 				_tprintf(_T("%d has got semaphore successfully\n"),th->thId);
 			else
 				_tprintf(_T("%d didn't get semaphore successfully\n"),th->thId);
-			if(th->equal==1){
+			/*if(th->equal==1){
 				_tprintf(_T("not equal,so %d exit\n"),th->thId);
+				ExitThread(NULL);
 				return 2;
-			}
+			}*/
 
 			_stprintf(th->path,_T("%s\\%s"),th->path,FindData.cFileName);
 			_tprintf(_T("the new path is %s\n"),th->path);
@@ -320,9 +347,12 @@ DWORD WINAPI Compare(LPVOID para){
 	}
 	if(thread_c.equal!=0)
 	{
+		//terminate other threads
 		for(i=0;i<thread_c.nCount;i++)
-			(thread_c.th[i]).equal = 1;
-		_tprintf(_T("not all contents are equal\n"));
+			TerminateThread(thread_c.threadh[i],NULL);
+
+		//	(thread_c.th[i]).equal = 1;
+		_tprintf(_T("\nnot all contents are equal\n"));
 	}
 	else
 	{
