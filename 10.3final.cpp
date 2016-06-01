@@ -186,11 +186,13 @@ DWORD WINAPI  TraverseDirectoryRecursive (LPVOID para)
 	DWORD FType;
 	DWORD dwWaitResult;
 	TCHAR SearchPath[L];
+	TCHAR save_path[L];
 	
-	par1=SearchPath;
 	_stprintf(SearchPath,_T("%s\\*"),th->path);
 	_tprintf(_T("%d SearchPath is %s\n"),th->thId,SearchPath);
-	par1=SearchPath;
+	_tcscpy(save_path,th->path);
+	_tprintf(_T("current path is %s\n"),par1);
+	//par1=SearchPath;
 	SearchHandle = FindFirstFile(SearchPath,&FindData);
 	if(SearchHandle==INVALID_HANDLE_VALUE)
 	{
@@ -266,7 +268,9 @@ DWORD WINAPI  TraverseDirectoryRecursive (LPVOID para)
 			//SetCurrentDirectory(current_dire);//???
 			//how to go upper layer
 			//---------to return to upper layer---------
-			_tcscpy(th->path,par1);
+			_tprintf(_T("return to previous layer\n"));
+			_tcscpy(th->path,save_path);
+			_tprintf(_T("previous path is %s\n"),th->path);
 		}
 		
 	} while (FindNextFile(SearchHandle,&FindData));
