@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<script>
+function Add(){
+var sum=0;
+var n1;
+var n2;
+n1 = document.getElementById('input1').value;
+n2 = document.getElementById('input2').value;
+sum = parseFloat(n1)+parseFloat(n2);
+//document.write("<p>sum is "+sum+"</p>");
+document.getElementById("SUM").value =sum;
+}
+</script>
+integer number1<br>
+<input type='text' onChange=Add() id='input1' /><br>
+integer number2<br>
+<input type='text' onChange=Add() id='input2' />
+
+<input type="text" value="0" id="SUM" readonly/>
+</body>
+</html>
