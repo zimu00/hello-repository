@@ -61,6 +61,11 @@ int _tmain (int argc, LPTSTR argv [])
 	else {
 		_tprintf(_T("error in waiting %d threads!\n"),argc-1);
 	}
+	for(i=0;i<argc-1;i++)
+		CloseHandle(ThreadHandle[i]);
+	free(ThreadHandle);
+	free(thread);
+	
 
 	Sleep(10000000);
 	return 0;
