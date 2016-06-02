@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<script type="text/javascript">
+function changeColor(color){
+    //var c = document.getElementByName('color').value;
+  document.body.style.backgroundColor = color;
+}
+</script>
+<form>
+<input type="radio" name="color" onclick="changeColor('red')" value="red">Red<br>
+<input type="radio" name="color" onclick="changeColor('green')" value="green">Green<br>
+<input type="radio" name="color" onclick="changeColor('yellow')" value="yellow">yellow<br>
+<input type="radio" name="color" onclick="changeColor('white')" value="white">white<br>
+
+</form>
+</body>
+</html>
