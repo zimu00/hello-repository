@@ -1,0 +1,222 @@
+Findfile error,first check the error code,know it is error cz of the path incorrect or the device is not available or something... if the path is incorrect can check debug or printing to see when the path starts becoming incorrect.like forget to write code to return to previous layer or pass wrong parameter(should read from argc[1] not argc[0]).
+If device problem,check the file handle closing time and opening time.
+Unhandled exception or invalid handle,check handle has been closed or not,and the array size,if jump to some compiler code like:pager...,it's due to the size exceeding the maximum stack or header,so can use dynamic allocation,like LPTSTR array...
+
+And th space of file is also a problem
+
+FindFirstFile is to find the file,so to find the files inside directory1,need to use %s//*
+
+10.1 is to write filename and size separately,but the result is it can't show on screen and files both correctly(binary code)
+
+10.11 is to write in structure,can read on screen correctly,but file can't be open directly for pdf
+
+10.12 is to check the real size,but why note becomes so big, 
+big is cz the size of data.name is too big,it is set name[L],L=5000
+10.12 all can be open,but why can't find name and size in the content of pdf,only in txt?
+
+http://stackoverflow.com/questions/4720876/cant-get-copyfile-to-work
+One special thing to keep in mind: CopyFile won't create the directory for the target file, it has to exist before you try to copy. There are numerous ways you can do this, such as with CreateDirectory, CreateDirectoryEx or SHCreateDirectoryEx).
+
+Before the size of writing is always 1 cz wrongly write in this way:
+WriteFile(hOut,&oldFile,_tcslen(oldFile),&nWrt,NULL);
+
+the free interval in the directory name will be identified into 2 directories
+
+the index of ThreadHandle must be from 0, otherwise waitForMultipleObjects can't work correctly
+
+thread_c->equal should have 3 values,1:not same;0:hasn't compared,2:equal;every time after receiving just a new semaphore needs to  reset to 0
+
+LPTSTR SearchPath=NULL;
+_stprintf(SearchPath,_T("%s\\*"),th->path); ------¡·error 
+so should use 
+SearchPath=th->path;
+	_stprintf(SearchPath,_T("%s\\*"),th->path);
+
+nono,can't do this,cz it can change the value of th->path
+can just build a new TCHAR temp[NAME];
+then SearchPath = temp;
+
+don't declare TCHAR SearchPath[L],but LPTSTR SearchPath,cz this is allocated from heap dynamicall,the heap and stack have reserved value.
+http://blog.csdn.net/laoyi_grace/article/details/6749836
+By default each thread in Win32 has 1 MB of stack space, and a million doubles would take up 8 MB of stack space. The solution is to allocate them from the heap using new.
+
+to convert an integer to string;
+char *_itoa( 
+   int value, 
+   char *string, 
+   int radix 
+);
+Parameters
+value
+Number to be converted.
+string
+String result.
+radix
+Base of value; must be in the range 2 ?36.
+Return Values
+Each function returns a pointer to string.
+There is no error return.
+TCHAR.H:_itot
+
+OR:char* buffer = ... allocate a buffer ...
+int value = 4564;
+sprintf(buffer, "%d", value);
+
+
+cz the threads change the directories so parent can't find the files created by threads:
+record fullname which including path
+OR every iteration parent sets the current directory according to current thread
+
+need to create file in a single function first,otw each iteration will create a new file in different directory
+cz directory is always changing
+
+DWORD WINAPI GetFullPathName(
+  _In_  LPCTSTR lpFileName,
+  _In_  DWORD   nBufferLength,
+  _Out_ LPTSTR  lpBuffer,
+  _Out_ LPTSTR  *lpFilePart
+);
+lpFileName [in]
+The name of the file.
+This parameter can be a short (the 8.3 form) or long file name. This string can also be a share or volume name.
+In the ANSI version of this function, the name is limited to MAX_PATH characters. To extend this limit to 32,767 
+wide characters, call the Unicode version of the function and prepend "\\?\" to the path. For more information, see Naming a File.
+nBufferLength [in]
+The size of the buffer to receive the null-terminated string for the drive and path, in TCHARs.
+lpBuffer [out]
+A pointer to a buffer that receives the null-terminated string for the drive and path.
+lpFilePart [out]
+A pointer to a buffer that receives the address (within lpBuffer) of the final file name component in the path.
+This parameter can be NULL.
+If lpBuffer refers to a directory and not a file, lpFilePart receives zero.
+
+Multithreaded applications and shared library code should not use the GetFullPathName function and should avoid 
+using relative path nam
+es. The current directory state written by the SetCurrentDirectory function is stored as 
+a global variable in each process, therefore multithreaded applications cannot reliably use this value without 
+possible data corruption from other threads that may also be reading or setting this value. This limitation also 
+applies to the SetCurrentDirectory and GetCurrentDirectory functions. The exception being when the application is 
+guaranteed to be running in a single thread, for example parsing file names from the command line argument string 
+in the main thread prior to creating any additional threads. Using relative path names in multithreaded applications
+ or shared library code can yield unpredictable results and is not supported.
+
+--->so i used mutex,THEN GET full path and create file using full path.
+
+GetFullPathName(temp,L,th->fileName,NULL);
+---->don't make same source name and destination name,the storage will have errors
+
+Error code 0x20 (32 decimal) is ERROR_SHARING_VIOLATION ("The process cannot access the file because it is being 
+used by another process.") So, yes, your guess about another process having the file open was correct. 
+---->then find yes,forgot to closehandle before next traverse,cz every traverse open again
+
+--->but maybe for current iteration the files haven't been looked over,so can't close simply
+--->think to put createFile outside then duplicate handle
+
+
+
+
+
+
+
+
+http://stackoverflow.com/questions/4720876/cant-get-copyfile-to-work
+One special thing to keep in mind: CopyFile won't create the directory for the target file, it has to exist before you try to copy. There are numerous ways you can do this, such as with CreateDirectory, CreateDirectoryEx or SHCreateDirectoryEx).
+
+Before the size of writing is always 1 cz wrongly write in this way:
+WriteFile(hOut,&oldFile,_tcslen(oldFile),&nWrt,NULL);
+
+the free interval in the directory name will be identified into 2 directories
+
+the index of ThreadHandle must be from 0, otherwise waitForMultipleObjects can't work correctly
+
+thread_c->equal should have 3 values,1:not same;0:hasn't compared,2:equal;every time after receiving just a new semaphore needs to  reset to 0
+
+LPTSTR SearchPath=NULL;
+_stprintf(SearchPath,_T("%s\\*"),th->path); ------¡·error 
+so should use 
+SearchPath=th->path;
+	_stprintf(SearchPath,_T("%s\\*"),th->path);
+
+nono,can't do this,cz it can change the value of th->path
+can just build a new TCHAR temp[NAME];
+then SearchPath = temp;
+
+don't declare TCHAR SearchPath[L],but LPTSTR SearchPath,cz this is allocated from heap dynamicall,the heap and stack have reserved value.
+http://blog.csdn.net/laoyi_grace/article/details/6749836
+By default each thread in Win32 has 1 MB of stack space, and a million doubles would take up 8 MB of stack space. The solution is to allocate them from the heap using new.
+
+to convert an integer to string;
+char *_itoa( 
+   int value, 
+   char *string, 
+   int radix 
+);
+Parameters
+value
+Number to be converted.
+string
+String result.
+radix
+Base of value; must be in the range 2 ?36.
+Return Values
+Each function returns a pointer to string.
+There is no error return.
+TCHAR.H:_itot
+
+OR:char* buffer = ... allocate a buffer ...
+int value = 4564;
+sprintf(buffer, "%d", value);
+
+
+cz the threads change the directories so parent can't find the files created by threads:
+record fullname which including path
+OR every iteration parent sets the current directory according to current thread
+
+need to create file in a single function first,otw each iteration will create a new file in different directory
+cz directory is always changing
+
+DWORD WINAPI GetFullPathName(
+  _In_  LPCTSTR lpFileName,
+  _In_  DWORD   nBufferLength,
+  _Out_ LPTSTR  lpBuffer,
+  _Out_ LPTSTR  *lpFilePart
+);
+lpFileName [in]
+The name of the file.
+This parameter can be a short (the 8.3 form) or long file name. This string can also be a share or volume name.
+In the ANSI version of this function, the name is limited to MAX_PATH characters. To extend this limit to 32,767 
+wide characters, call the Unicode version of the function and prepend "\\?\" to the path. For more information, see Naming a File.
+nBufferLength [in]
+The size of the buffer to receive the null-terminated string for the drive and path, in TCHARs.
+lpBuffer [out]
+A pointer to a buffer that receives the null-terminated string for the drive and path.
+lpFilePart [out]
+A pointer to a buffer that receives the address (within lpBuffer) of the final file name component in the path.
+This parameter can be NULL.
+If lpBuffer refers to a directory and not a file, lpFilePart receives zero.
+
+Multithreaded applications and shared library code should not use the GetFullPathName function and should avoid 
+using relative path nam
+es. The current directory state written by the SetCurrentDirectory function is stored as 
+a global variable in each process, therefore multithreaded applications cannot reliably use this value without 
+possible data corruption from other threads that may also be reading or setting this value. This limitation also 
+applies to the SetCurrentDirectory and GetCurrentDirectory functions. The exception being when the application is 
+guaranteed to be running in a single thread, for example parsing file names from the command line argument string 
+in the main thread prior to creating any additional threads. Using relative path names in multithreaded applications
+ or shared library code can yield unpredictable results and is not supported.
+
+
+--¡·¡·¡·¡·¡·don't use them,just using search handle,findfiles,everytime change file path
+
+--->so i used mutex,THEN GET full path and create file using full path.
+
+GetFullPathName(temp,L,th->fileName,NULL);
+---->don't make same source name and destination name,the storage will have errors
+
+Error code 0x20 (32 decimal) is ERROR_SHARING_VIOLATION ("The process cannot access the file because it is being 
+used by another process.") So, yes, your guess about another process having the file open was correct. 
+---->then find yes,forgot to closehandle before next traverse,cz every traverse open again
+
+--->but maybe for current iteration the files haven't been looked over,so can't close simply
+--->think to put createFile outside then duplicate handle
+
