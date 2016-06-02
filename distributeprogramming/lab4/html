@@ -1,0 +1,19 @@
+to make page content full screen:
+html,body{height:100%;width:100%}
+then in every part:divide
+
+margin: top right bottom left;
+
+to make a table in the middle of the screen:
+write in the corresponsing class:vertical-align:middle
+
+to change the body color for the whole text: 
+<body text="green">
+OR
+writen in css:
+body{color:white
+
+css text-align:center
+h1 {
+    text-align: center;
+}
