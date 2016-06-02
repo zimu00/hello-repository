@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<table id="myTable">
+                <tr>
+                    <td>number</td>
+                    <td>square</td>
+                    <td>cube power</td>
+                </tr>
+</table>
+<script>
+var n = prompt("Insert a number:");
+
+var i;
+for (i=0;i<n;i++){
+var table = document.getElementById("myTable");
+    var header = table.createTHead();
+    var row = header.insertRow(0);
+    var cell = row.insertCell(0);
+    var cell_square = row.insertCell(1);
+    var cell_cube = row.insertCell(2);
+    
+    cell.innerHTML = i;
+    cell_square.innerHTML = i*i;
+    cell_cube.innerHTML = i*i*i;
+
+    }
+
+
+</script>
+</body>
+</html>

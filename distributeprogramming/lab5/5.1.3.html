@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+
+<button onclick="myFunction1()">Input first number</button>
+<button onclick="myFunction2()">Input second number</button>
+
+<p id="sum"></p>
+<p id="difference"></p>
+
+<script>
+function myFunction1(){
+	var number1 = prompt("first number");
+}
+function myFunction2(){
+    var number2 = prompt("first number");
+}
+if( (number1!=null)&&(number2!=null) ){
+    document.getElementById("sum").innerHTML =
+        "the sum is "+number1+number2;
+    document.getElementById("difference").innerHTML=
+    	"the difference is "+number1-number2;
+}
+</script>
+
+</body>
+</html>
