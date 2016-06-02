@@ -88,7 +88,7 @@ int _tmain (int argc, LPTSTR argv [])
 		CloseHandle(h);
 	}
 		
-
+	_tprintf(_T("------check file finishes------\n"));
 	Sleep(10000000);
 	return 0;
 }
