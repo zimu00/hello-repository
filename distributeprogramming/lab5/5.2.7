@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<script>
+function Calculate(){
+	var quantity1=document.getElementById("select1").value;
+	var quantity2=document.getElementById("select2").value;
+	var quantity3=document.getElementById("select3").value;
+	var price1=0.5;
+	var price2=1.0;
+	var price3=2.0;
+	document.getElementById("input1").value=price1*quantity1+price2*quantity2+price3*quantity3;
+}
+function Reset(){
+	document.getElementById("select1").value="";
+	document.getElementById("select2").value="";
+	document.getElementById("select3").value="";
+    document.getElementById("input1").value="";
+}
+</script>
+
+floppy disk<br>
+<select id="select1">
+    <option  value="0">0</option>
+    <option  value="1">1</option>
+    <option  value="2">2</option>
+    <option  value="3">3</option>
+    <option  value="4">4</option>
+    <option  value="5">5</option>
+    <option  value="6">6</option>
+    <option  value="7">7</option>
+    <option  value="8">8</option>
+    <option  value="9">9</option>
+    <option  value="10">10</option>
+</select><br><br>
+
+CD-R<br>
+<select id="select2">
+    <option  value="0">0</option>
+    <option  value="1">1</option>
+    <option  value="2">2</option>
+    <option  value="3">3</option>
+    <option  value="4">4</option>
+    <option  value="5">5</option>
+    <option  value="6">6</option>
+    <option  value="7">7</option>
+    <option  value="8">8</option>
+    <option  value="9">9</option>
+    <option  value="10">10</option>
+</select><br><br>
+
+DVD-R<br>
+<select id="select3">
+    <option  value="0">0</option>
+    <option  value="1">1</option>
+    <option  value="2">2</option>
+    <option  value="3">3</option>
+    <option  value="4">4</option>
+    <option  value="5">5</option>
+    <option  value="6">6</option>
+    <option  value="7">7</option>
+    <option  value="8">8</option>
+    <option  value="9">9</option>
+    <option  value="10">10</option>
+</select><br><br>
+
+<input type="button"  id="button1" onClick=Calculate() value="calculate"/>
+<input type="button"  id="button2" onClick=Reset() value="reset"/><br>
+
+total cost:<br>
+<input type="text" id="input1" readonly/>
+
+</body>
+</html>
