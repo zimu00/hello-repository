@@ -1,0 +1,30 @@
+http://stackoverflow.com/questions/12896766/check-form-input-length-via-php-with-maxlength-tag
+because anyone can "duplicate" your form and use it. Server-side checks are better than client-side. (It's safe)
+
+For instance , your form:
+
+<form method='post' action='/pay.php'>
+<input type='text' maxlength='10' name='addres'>
+</form>
+I can easily do something like this: (and upload it to some free server or something like that)
+
+<form method='post' action='http://www.yourdomain.com/pay.php'>
+<input type='text' name='addres'><!--no maxlength='10' for me-->
+</form>
+Now I'm kind of "over pass" your limitation.
+
+However , you can edit your pay.php file:
+
+$addres = clean_input($_POST['addres']); //A custom function to make sure it's a clean string
+if(strlen($addres) > 100)
+{
+  //Something weird
+}
+else
+{
+  //We're good
+}
+
+/****************error1******************/
+Cannot use isset() on the result of an expression
+ $_POST['submit'] instead of ('submit')
