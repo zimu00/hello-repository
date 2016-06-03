@@ -7,3 +7,7 @@ to work using php:
 5.run again(if still no object,try only use the project name),everytime delete previous configuration
 
 to build project,select local php project
+
+
+in php.init,found for Xdebug,the extension:no that file,so download online:https://xdebug.org/files/
+then put it there(_before found on apache error log,there are warnings like can't find Id related with that unfounded file)
