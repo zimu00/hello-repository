@@ -1,0 +1,2 @@
+1.triggered a breakpoint: (heap corruption)
+after closeHandle,don't  free again
