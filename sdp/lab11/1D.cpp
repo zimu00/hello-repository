@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+HANDLE Semaphore;
+
 typedef struct Threads{
 
 	DWORD thId;
@@ -37,6 +39,15 @@ int _tmain(int argc,LPTSTR argv []){
 	
 	ThreadHandle = (HANDLE *)malloc(sizeof(HANDLE)*(argc-1));
 	thread = (Threads_t *)malloc(sizeof(HANDLE)*(argc-1));
+
+	//Create a mutex with no initial owner
+	Semaphore = CreateSemaphore(
+			NULL, // default security attributes
+			1,// initially  owned one
+			1,//maximum count
+			NULL// unnamed semaphore
+		);
+
 	_tcscpy(name_account,argv[1]);
 	_tprintf(_T("Account file name is %s\n"),name_account);
 
@@ -59,7 +70,7 @@ int _tmain(int argc,LPTSTR argv []){
 		_tprintf(_T("%d %ld %s %s %ld\n"),record.row,record.id,record.name,record.surname,record.amount);
 	}
 	CloseHandle(hIn);
-
+	CloseHandle(Semaphore);
 	
 	
 	//create threads
@@ -106,6 +117,7 @@ DWORD WINAPI operation(LPVOID param){
 	Record record,record2;
 	LARGE_INTEGER fileReserved,filePos;
 	OVERLAPPED ov = {0,0,0,0,NULL};
+	
 
 	_tprintf(_T("%d operation file name is %s\n"),th->thId,th->name);
 
@@ -116,7 +128,6 @@ DWORD WINAPI operation(LPVOID param){
 		Sleep(200000);
 		return 1;
 	}
-
 
 	hIn = CreateFile(th->name,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
 	if(hIn == INVALID_HANDLE_VALUE){
@@ -140,22 +151,32 @@ DWORD WINAPI operation(LPVOID param){
 			ov.hEvent = 0;
 
 			_tprintf(_T("%d the difference of amount is %d\n"),th->thId,record.amount);
-			//lockfile
-			LockFileEx(hOut,LOCKFILE_EXCLUSIVE_LOCK,0,fileReserved.LowPart,fileReserved.HighPart,&ov);
+			//wait for mutex
+			WaitForSingleObject(Semaphore,INFINITE);
 
 			ReadFile(hOut,&record2,sizeof(Record),&nIn,&ov);
-	
+			
 			_tprintf(_T("%d before amount is %d\n"),th->thId,record2.amount);
 			record2.amount=record2.amount + record.amount;
 			_tprintf(_T("%d after amount is %d\n"),th->thId,record2.amount);
 
 			
 			WriteFile(hOut,&record2,sizeof(record2),&nOut,&ov);	
-			UnlockFileEx(hOut,0,fileReserved.LowPart,fileReserved.HighPart,&ov);
+			if (!ReleaseSemaphore( 
+                        Semaphore,  // handle to semaphore
+                        1,            // increase count by one
+                        NULL) )       //interested in previous count
+                {
+					printf("%d ReleaseSemaphore error: %d\n",th->thId, GetLastError());
+                }
+			else{
+				_tprintf(_T("%d have released semaphore\n"),th->thId);
+			}
 
 			if(nOut!=nIn){
 				_ftprintf(stderr,_T("%d fatal write %d error:%x\n"),th->thId,sizeof(Record),GetLastError());
 				CloseHandle(hIn);
+				
 				CloseHandle(hOut);
 				Sleep(200000);
 				return 4;
@@ -164,6 +185,7 @@ DWORD WINAPI operation(LPVOID param){
 	}
 	CloseHandle(hOut);
 	CloseHandle(hIn);
+
 	return 0;
 }
 

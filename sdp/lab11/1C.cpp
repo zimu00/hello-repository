@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+HANDLE mutex;
+
 typedef struct Threads{
 
 	DWORD thId;
@@ -37,6 +39,14 @@ int _tmain(int argc,LPTSTR argv []){
 	
 	ThreadHandle = (HANDLE *)malloc(sizeof(HANDLE)*(argc-1));
 	thread = (Threads_t *)malloc(sizeof(HANDLE)*(argc-1));
+
+	//Create a mutex with no initial owner
+	mutex = CreateMutex(
+			NULL, // default security attributes
+			FALSE,// initially not owned
+			NULL// unnamed mutex
+		);
+
 	_tcscpy(name_account,argv[1]);
 	_tprintf(_T("Account file name is %s\n"),name_account);
 
@@ -106,6 +116,8 @@ DWORD WINAPI operation(LPVOID param){
 	Record record,record2;
 	LARGE_INTEGER fileReserved,filePos;
 	OVERLAPPED ov = {0,0,0,0,NULL};
+	CRITICAL_SECTION cs;
+	InitializeCriticalSection (&cs);
 
 	_tprintf(_T("%d operation file name is %s\n"),th->thId,th->name);
 
@@ -116,7 +128,6 @@ DWORD WINAPI operation(LPVOID param){
 		Sleep(200000);
 		return 1;
 	}
-
 
 	hIn = CreateFile(th->name,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
 	if(hIn == INVALID_HANDLE_VALUE){
@@ -140,22 +151,31 @@ DWORD WINAPI operation(LPVOID param){
 			ov.hEvent = 0;
 
 			_tprintf(_T("%d the difference of amount is %d\n"),th->thId,record.amount);
-			//lockfile
-			LockFileEx(hOut,LOCKFILE_EXCLUSIVE_LOCK,0,fileReserved.LowPart,fileReserved.HighPart,&ov);
+			//wait for mutex
+			WaitForSingleObject(mutex,INFINITE);
+		_tprintf(_T("\n%d has got the mutex\n"),th->thId);
 
 			ReadFile(hOut,&record2,sizeof(Record),&nIn,&ov);
-	
+			
 			_tprintf(_T("%d before amount is %d\n"),th->thId,record2.amount);
 			record2.amount=record2.amount + record.amount;
 			_tprintf(_T("%d after amount is %d\n"),th->thId,record2.amount);
 
 			
 			WriteFile(hOut,&record2,sizeof(record2),&nOut,&ov);	
-			UnlockFileEx(hOut,0,fileReserved.LowPart,fileReserved.HighPart,&ov);
+			//release ownership of the mutex object
+if(!ReleaseMutex(mutex))
+{
+_ftprintf(stderr,_T("%d Release failed.Error:%x\n"),th->thId,GetLastError());
+return 9;
+}
+else 
+_tprintf(_T("%d released the mutex\n"),th->thId);
 
 			if(nOut!=nIn){
 				_ftprintf(stderr,_T("%d fatal write %d error:%x\n"),th->thId,sizeof(Record),GetLastError());
 				CloseHandle(hIn);
+				DeleteCriticalSection(&cs);
 				CloseHandle(hOut);
 				Sleep(200000);
 				return 4;
@@ -164,6 +184,7 @@ DWORD WINAPI operation(LPVOID param){
 	}
 	CloseHandle(hOut);
 	CloseHandle(hIn);
+	DeleteCriticalSection(&cs);
 	return 0;
 }
 
