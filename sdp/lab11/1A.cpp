@@ -14,7 +14,7 @@ typedef struct Threads{
 
 	DWORD thId;
 	TCHAR name[NAME];
-	HANDLE hOut;
+	//HANDLE hOut;
 }Threads_t;
 
 typedef struct Records{
@@ -29,7 +29,7 @@ DWORD WINAPI operation(LPVOID param);
 TCHAR name_account[NAME];
 
 int _tmain(int argc,LPTSTR argv []){
-	HANDLE *ThreadHandle,h,hOut,hIn;
+	HANDLE *ThreadHandle,h,hIn;
 	Threads_t *thread;
 	int i;
 	DWORD n;
@@ -60,18 +60,12 @@ int _tmain(int argc,LPTSTR argv []){
 	}
 	CloseHandle(hIn);
 
-	hOut = CreateFile(name_account,GENERIC_WRITE,FILE_SHARE_WRITE,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
-	if(hOut == INVALID_HANDLE_VALUE){
-		_ftprintf(stderr,_T("Cannot open input file.Error:%x\n"),GetLastError());
-		CloseHandle(hOut);
-		Sleep(200000);
-		return 1;
-	}
+	
 	
 	//create threads
 	for(i=0;i<argc-2;i++){
 		_tcscpy(thread[i].name,argv[i+2]);
-		thread[i].hOut = hOut;
+		//thread[i].hOut = hOut;
 		ThreadHandle[i] = CreateThread(0,0,(LPTHREAD_START_ROUTINE)operation,&thread[i],0,&thread[i].thId); 
 	}
 
@@ -79,9 +73,8 @@ int _tmain(int argc,LPTSTR argv []){
 	WaitForMultipleObjects(argc-2,ThreadHandle,TRUE,INFINITE);
 	for(i=0;i<argc-2;i++)
 		CloseHandle(ThreadHandle[i]);
-	CloseHandle(hOut);
 
-	_tprintf(_T("file before updating is:\n"));
+	_tprintf(_T("file after updating is:\n"));
 	h=CreateFile(name_account,GENERIC_READ,0,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
 	if(h==INVALID_HANDLE_VALUE){
 		_ftprintf(stderr,_T("Cannot open output file.Error:%x\n"),GetLastError());
@@ -108,13 +101,21 @@ int _tmain(int argc,LPTSTR argv []){
 DWORD WINAPI operation(LPVOID param){
 
 	Threads_t *th= (Threads_t *)param;
-	HANDLE hIn;
+	HANDLE hIn,hOut;
 	DWORD nIn,nOut;
-	Record record;
+	Record record,record2;
 	LARGE_INTEGER fileReserved,filePos;
 	OVERLAPPED ov = {0,0,0,0,NULL};
 
 	_tprintf(_T("%d operation file name is %s\n"),th->thId,th->name);
+
+	hOut = CreateFile(name_account,GENERIC_WRITE|GENERIC_WRITE,FILE_SHARE_WRITE|FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+	if(hOut == INVALID_HANDLE_VALUE){
+		_ftprintf(stderr,_T("%d Cannot open input file.Error:%x\n"),th->thId,GetLastError());
+		CloseHandle(hOut);
+		Sleep(200000);
+		return 1;
+	}
 
 	hIn = CreateFile(th->name,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
 	if(hIn == INVALID_HANDLE_VALUE){
@@ -136,19 +137,27 @@ DWORD WINAPI operation(LPVOID param){
 			ov.Offset = filePos.LowPart;
 			ov.OffsetHigh = filePos.HighPart;
 			ov.hEvent = 0;
+
+			_tprintf(_T("%d the difference of amount is %d\n"),th->thId,record.amount);
 			//lockfile
-			LockFileEx(th->hOut,LOCKFILE_EXCLUSIVE_LOCK,0,fileReserved.LowPart,fileReserved.HighPart,&ov);
+			LockFileEx(hOut,LOCKFILE_EXCLUSIVE_LOCK,0,fileReserved.LowPart,fileReserved.HighPart,&ov);
 			
-			WriteFile(th->hOut,&record,sizeof(record),&nOut,&ov);	
-			UnlockFileEx(th->hOut,0,fileReserved.LowPart,fileReserved.HighPart,&ov);
+			ReadFile(hOut,&record2,sizeof(Record),&nIn,&ov);
+			_tprintf(_T("%d before amount is %d\n"),th->thId,record2.amount);
+			record2.amount=record2.amount + record.amount;
+			_tprintf(_T("%d after amount is %d\n"),th->thId,record2.amount);
+			WriteFile(hOut,&record2,sizeof(record2),&nOut,&ov);	
+			UnlockFileEx(hOut,0,fileReserved.LowPart,fileReserved.HighPart,&ov);
 			if(nOut!=nIn){
 				_ftprintf(stderr,_T("%d fatal write %d error:%x\n"),th->thId,sizeof(Record),GetLastError());
 				CloseHandle(hIn);
+				CloseHandle(hOut);
 				Sleep(200000);
 				return 4;
 			}
 		}
 	}
+	CloseHandle(hOut);
 	CloseHandle(hIn);
 	return 0;
 }
