@@ -1,2 +1,30 @@
 1.triggered a breakpoint: (heap corruption)
 after closeHandle,don't  free again
+
+FILE_SHARE_WRITE:Enables subsequent open operations on a file or device to request write access.
+Otherwise, other processes cannot open the file or device if they request write access.
+If this flag is not specified, but the file or device has been opened for write access or has a file mapping with write access, the function fails.
+
+Because the original files are normal Ascii,so the size is not as I wrote,so I use binarConvert file to convert each ASCII file into 
+binary file first
+
+error LNK2005: "unsigned long __stdcall operation(void *)" (?operation@@YGKPAX@Z) already defined in 1A.obj
+cz forget to remove other cpp,2 cpps in one project
+
+One file can have different handles,but if want to be accessed by different threads,if read:
+hIn1 = CreateFile(name_account,GENERIC_READ,FILE_SHARE_READ|FILE_SHARE_WRITE,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+ and need to lock the part it wants to read to be avoided modified
+ FILE_SHARE_WRITE and FILE_SHARE_READ need both have
+ 
+ Or can simply use hIn1 = CreateFile(name_account,GENERIC_READ|GENERIC_WRITE,FILE_SHARE_READ|FILE_SHARE_WRITE,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+DOn't use first method,cz the result is not correct,reason is under searching.............
+
+
+/*----------------to convert a string into integer---------------*/
+Use sprintf():
+
+int aInt = 368;
+char str[15];
+sprintf(str, "%d", aInt);
+
+atoi: _tstoi in tchar.h
