@@ -11,11 +11,18 @@
 #include <assert.h>
 
 #define BUFFER 200
+#define MAX_ITERATION 5
 
 INT N;
 INT T;
 DWORD global_message_id = 0;
 CRITICAL_SECTION cs_m;//to protect messages;
+
+typedef struct Messages
+{
+	DWORD thId;
+	TCHAR content[BUFFER];
+}Message,*LPMESSAGE;
 
 typedef struct Queue
 {
@@ -24,8 +31,6 @@ typedef struct Queue
 	DWORD counter;
 	CONDITION_VARIABLE full;
 	CONDITION_VARIABLE empty;
-	CONDITION_VARIABLE MEp;
-	CONDITION_VARIABLE MEc;
 	DWORD insert_p;
 	DWORD remove_p;
 	DWORD dimension;
@@ -37,15 +42,13 @@ typedef struct Threads
 	LPQUEUE q;
 }Threads_t;
 
-typedef struct Messages
-{
-	DWORD thId;
-	TCHAR content[BUFFER];
-}Message,*LPMESSAGE;
-
 LPQUEUE initialQueue(DWORD);
+VOID destroyQueue(LPQUEUE q);
 DWORD WINAPI product(LPVOID);
 DWORD WINAPI consume(LPVOID);
+VOID enqueue(LPQUEUE q,Message m);
+Message dequeue(LPQUEUE q);
+Message writeMessage(LPTSTR content);
 
 int _tmain(int argc,LPTSTR argv[]){
 	HANDLE *ThreadHandle;
@@ -87,7 +90,7 @@ int _tmain(int argc,LPTSTR argv[]){
 	}
 
 	DeleteCriticalSection(&cs_m);
-	free(products);
+	destroyQueue(products);
 	free(thread);
 }
 
@@ -95,59 +98,19 @@ DWORD WINAPI product(LPVOID param){
 	Threads_t *th = (Threads_t *)param;
 	Message m;
 	srand(time(NULL));
-	int n,j;
+	INT n,j;
+	DWORD i=0;
 
-	while(1){
+	while(i<MAX_ITERATION){
 	//generate random number at random time interval
-	n=rand()%(T+1);
+	n=1000*rand()%(T+1);
 	Sleep(n);
 	j = rand()%10;
-	m.content
-
-	WaitForSingleObject(empty,INFINITE);
-	//_tprintf(_T("%d the semaphore of MEp amount is %d\n"),th->thId,MEp);
-	WaitForSingleObject(MEp,INFINITE);
-	//wait for mutex
-	WaitForSingleObject(mutex,INFINITE);
-	_tprintf(_T("\n%d has got the mutex\n"),th->thId);
-	//enqueue
-	products[counter%N]=m;
-	counter++;
-	_tprintf(_T("%d produced product %d,now has %d products\n"),th->thId,m,counter);
-	if(!ReleaseMutex(mutex))
-	{
-		_ftprintf(stderr,_T("%d Release failed.Error:%x\n"),th->thId,GetLastError());
-		Sleep(1000000000);
-		return 9;
-	}
-	else 
-		_tprintf(_T("%d released the mutex\n"),th->thId);
-	//signal MEp
-	if (!ReleaseSemaphore(
-		MEp,
-		1,
-		NULL
-		))
-	{
-		_tprintf(_T("----->%d thread ReleaseMEp error:%d\n"),th->thId,GetLastError());
-	}
-	else
-	{
-		_tprintf(_T("----->%d thread have release MEp\n"),th->thId);
-	}
-	//signal full
-	if (!ReleaseSemaphore(
-		full,
-		1,
-		NULL
-		))
-	{
-		_tprintf(_T("----->%d thread Releasefull error:%d\n"),th->thId,GetLastError());
-	}
-	else
-	{
-		_tprintf(_T("----->%d thread have release full\n"),th->thId);
-	}
+	_stprintf(m.content,_T("message %d produced by thread %d\n"),j,th->thId);
+	writeMessage(m.content);
+	enqueue(th->q,m);
+	_tprintf(_T("producer %d sent one message to the queue\n"),th->thId);
+	i++;
 	}
 	Sleep(1000000000);
 	return 0;
@@ -156,61 +119,19 @@ DWORD WINAPI product(LPVOID param){
 DWORD WINAPI consume(LPVOID param){
 	Threads_t *th = (Threads_t *)param;
 
-	//Message m;
+	Message m;
 	srand(time(NULL));
-	int n,m;
+	INT n;	
+	DWORD i=0;
 
-	while(1){
+	while(i<MAX_ITERATION){
 	//generate random number at random time interval
-	n=rand()%(T+1);
+	n=1000*rand()%(T+1);
 	Sleep(n);
-	m = rand()%10;
 
-	WaitForSingleObject(full,INFINITE);
-	WaitForSingleObject(MEc,INFINITE);
-	//wait for mutex
-	WaitForSingleObject(mutex,INFINITE);
-	_tprintf(_T("\n%d consumer has got the mutex\n"),th->thId);
 	//dequeue
-	counter--;//??
-	m=products[counter%N];
-	_tprintf(_T("%d Now the counter value is %d\n"),th->thId,counter);
-
-	if(!ReleaseMutex(mutex))
-	{
-		_ftprintf(stderr,_T("%d consumer Release failed.Error:%x\n"),th->thId,GetLastError());
-		Sleep(1000000000);
-		return 9;
-	}
-	else 
-		_tprintf(_T("%d released the mutex\n"),th->thId);
-	//signal MEp
-	if (!ReleaseSemaphore(
-		MEc,
-		1,
-		NULL
-		))
-	{
-		_tprintf(_T("----->%d thread ReleaseMEp error:%d\n"),th->thId,GetLastError());
-	}
-	else
-	{
-		_tprintf(_T("----->%d thread have release MEp\n"),th->thId);
-	}
-	//signal full
-	if (!ReleaseSemaphore(
-		empty,
-		1,
-		NULL
-		))
-	{
-		_tprintf(_T("----->%d thread Releasefull error:%d\n"),th->thId,GetLastError());
-	}
-	else
-	{
-		_tprintf(_T("----->%d thread have released full\n"),th->thId);
-	}
-	_tprintf(_T("consumer %d consumes product %d"),th->thId,m);
+	 m=dequeue(th->q);
+	_tprintf(_T("consumer %d consumes product  content is %s\n"),th->thId,m.thId,m.content);
 	}
 	Sleep(1000000000);
 	return 0;
@@ -227,9 +148,7 @@ LPQUEUE initialQueue(DWORD dimenstion){
 
 	InitializeConditionVariable(&q->full);
 	InitializeConditionVariable(&q->empty);
-	InitializeConditionVariable(&q->MEc);
-	InitializeConditionVariable(&q->MEp);
-
+	InitializeCriticalSection(&q->cs)£»
 	return q;
 }
 
@@ -237,12 +156,12 @@ VOID enqueue(LPQUEUE q,Message m){
 	if(q == NULL){
 		_ftprintf(stderr,_T("dequeue called on a NULL queue\n"));
 		m.thId = 0;
-		return m;
+		return;
 	}
 
-	while(q->counter ==q->dimension)
+	while( q->counter ==q->dimension )
 	{
-		_tprintf(_T("the queue is full now\n");
+		_tprintf(_T("the queue is full now\n"));
 		SleepConditionVariableCS(&q->full,&q->cs,INFINITE);
 	}
 	EnterCriticalSection(&q->cs);
