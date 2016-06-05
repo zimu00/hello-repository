@@ -5,3 +5,7 @@ typedef struct messages{
 }Message,*LPMESSAGE;
 sizeof(LPMESSAGE) 4
 sizeof(Message) 104
+
+
+i got into a deadlock
+http://stackoverflow.com/questions/7123755/vc-2010-weird-critical-section-error
