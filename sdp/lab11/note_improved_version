@@ -11,3 +11,5 @@ i got into a deadlock
 http://stackoverflow.com/questions/7123755/vc-2010-weird-critical-section-error
 can debug finding q is not initialized in dequeue()
 q=(LPQUEUE)calloc(1,sizeof(Queue)); should not be sizeof(LPQUEUE)
+found in consumer side forget to add this when create consumer threads,so of course empty
+thread[i].q = products;
