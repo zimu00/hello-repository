@@ -2,7 +2,10 @@
 <body>
 	
 	<?php 
+	function check(){
 		echo "I'm server";
+		if( isset($_REQUEST["name"])&&isset($_REQUEST["age"]) && isset($_REQUEST["number"]) )
+		{
 		$name=$_REQUEST["name"];
 		$age = $_REQUEST["age"];
 		$number = $_REQUEST["number"];
@@ -54,7 +57,11 @@
 				echo "the number is :",$number;
 			}
 		}
-		
+		}
+		else 
+			echo "no complete input data";
+		return;
+	}
 		?>
 </body>
 </html>
