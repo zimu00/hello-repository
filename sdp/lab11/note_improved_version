@@ -18,3 +18,8 @@ the customer and producer need to be waited separately cz otw once consumer fini
 consumes,then will keep on waiting,same idea with producer finishes first
 
 before can't run then find when debug several times one line by one line in the begining,it can work or rebuild,sth repeat,then work...
+
+
+--->in general,this lab is like student and office service but working in windows instead of unix.
+set condition variables,different functions like initial,destroy,produce and consume,take care about the semaphores.
+
