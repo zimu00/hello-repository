@@ -2,10 +2,10 @@
 <body>
 	
 	<?php 
-	function check(){
-		$name=$_REQUEST['name'];
-		$age = $_REQUEST['age'];
-		$number = $_REQUEST['number'];
+		echo "I'm server";
+		$name=$_REQUEST["name"];
+		$age = $_REQUEST["age"];
+		$number = $_REQUEST["number"];
 		$subnumber = explode("-", $number);
 		echo $name,"<br>",$age,"<br>",$number,"<br>";
 		//check name
@@ -54,7 +54,7 @@
 				echo "the number is :",$number;
 			}
 		}
-		}
+		
 		?>
 </body>
 </html>
