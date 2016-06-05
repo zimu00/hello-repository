@@ -28,3 +28,15 @@ char str[15];
 sprintf(str, "%d", aInt);
 
 atoi: _tstoi in tchar.h
+
+
+find after one thread releases semaphore,it can't go on,after debugging found cz the release semaphore process is outside while loop
+
+ #include <assert.h>
+
+       void assert(scalar expression);
+
+see requirements in detail,it usually gives hints,for example the products array should be dynamic,so can't initialize size before,
+should use  INT *products
+
+the counter value should also be printed inside the lock
