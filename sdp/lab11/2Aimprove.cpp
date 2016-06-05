@@ -40,7 +40,7 @@ typedef struct Threads
 {
 	DWORD thId;
 	LPQUEUE q;
-}Threads_t;
+}Threads_t,*pThreads;
 
 LPQUEUE initialQueue(DWORD);
 VOID destroyQueue(LPQUEUE q);
@@ -57,9 +57,10 @@ int _tmain(int argc,LPTSTR argv[]){
 	INT i;
 	INT P,C;
 	LPQUEUE products; 
+	products = NULL;
 
 	P=_tstoi(argv[1]);
-	C=_tstoi(argv[1]);
+	C=_tstoi(argv[2]);
 	count = P + C;
 	N = _tstoi(argv[3]);
 	T = _tstoi(argv[4]);
@@ -69,6 +70,7 @@ int _tmain(int argc,LPTSTR argv[]){
 	InitializeCriticalSection(&cs_m);
 	products=initialQueue(N);
 	
+
 	ThreadHandle = (HANDLE *)malloc(sizeof(HANDLE)*count);
 	thread = (Threads_t *)malloc(sizeof(Threads_t *)*count);
 
@@ -79,11 +81,13 @@ int _tmain(int argc,LPTSTR argv[]){
 	}
 	for(;i<count;i++)
 	{
+		thread[i].q = products;
 		ThreadHandle[i] = CreateThread(0,0,(LPTHREAD_START_ROUTINE)consume,&thread[i],0,&thread[i].thId);
 	}
 
 
-	WaitForMultipleObjects(count,ThreadHandle,TRUE,INFINITE);
+	WaitForMultipleObjects(P,ThreadHandle,TRUE,INFINITE);
+	WaitForMultipleObjects(C,ThreadHandle,TRUE,INFINITE);
 	for(i=0;i<count;i++)
 	{
 		CloseHandle(ThreadHandle[i]);
@@ -95,10 +99,10 @@ int _tmain(int argc,LPTSTR argv[]){
 }
 
 DWORD WINAPI product(LPVOID param){
-	Threads_t *th = (Threads_t *)param;
+	pThreads th = (pThreads)param;
 	Message m;
 	srand(time(NULL));
-	INT n,j;
+	DWORD n,j;
 	DWORD i=0;
 
 	while(i<MAX_ITERATION){
@@ -106,18 +110,20 @@ DWORD WINAPI product(LPVOID param){
 	n=1000*rand()%(T+1);
 	Sleep(n);
 	j = rand()%10;
+	_tprintf(_T("j is %d\n"),j);
 	_stprintf(m.content,_T("message %d produced by thread %d\n"),j,th->thId);
-	writeMessage(m.content);
+	m=writeMessage(m.content);
 	enqueue(th->q,m);
 	_tprintf(_T("producer %d sent one message to the queue\n"),th->thId);
 	i++;
 	}
+		_tprintf(_T("producer %d finishes!\n---------"),th->thId);
 	Sleep(1000000000);
 	return 0;
 }
 
 DWORD WINAPI consume(LPVOID param){
-	Threads_t *th = (Threads_t *)param;
+	pThreads th = (pThreads)param;
 
 	Message m;
 	srand(time(NULL));
@@ -131,24 +137,28 @@ DWORD WINAPI consume(LPVOID param){
 
 	//dequeue
 	 m=dequeue(th->q);
-	_tprintf(_T("consumer %d consumes product  content is %s\n"),th->thId,m.thId,m.content);
+	_tprintf(_T("consumer %d consumes product  content is %s\n"),th->thId,m.content);
+	i++;
 	}
+	_tprintf(_T("consumer %d finishes!\n---------"),th->thId);
 	Sleep(1000000000);
 	return 0;
 }
 LPQUEUE initialQueue(DWORD dimenstion){
 	LPQUEUE q=NULL;
-	q=(LPQUEUE)calloc(1,sizeof(LPQUEUE));
+	q=(LPQUEUE)calloc(1,sizeof(Queue));
 
+	_tprintf(_T("sizeof(LPMESSAGE=%d,sizeof(Message)=%d\n"),sizeof(LPMESSAGE),sizeof(Message));
 	q->counter = 0;
 	q->insert_p = 0;
 	q->remove_p = 0;
 	q->dimension = dimenstion;
-	q->message = (LPMESSAGE)calloc(dimenstion,sizeof(LPMESSAGE));//size of LPMESSAGE 
+	//q->message->content[0]=0;
+	q->message = (LPMESSAGE)calloc(dimenstion,sizeof(Message));//size of LPMESSAGE 
 
 	InitializeConditionVariable(&q->full);
 	InitializeConditionVariable(&q->empty);
-	InitializeCriticalSection(&q->cs)£»
+	InitializeCriticalSection(&q->cs);
 	return q;
 }
 
@@ -166,11 +176,13 @@ VOID enqueue(LPQUEUE q,Message m){
 	}
 	EnterCriticalSection(&q->cs);
 	q->message[q->insert_p++]=m;
+	_tprintf(_T("---message %d enters into queue\n"),m.thId);
 	q->counter++;
 	q->insert_p %= q->dimension;
 	WakeConditionVariable(&q->empty);//wake up a thread who is waiting cz of empty
 	LeaveCriticalSection(&q->cs);
-	_tprintf(_T("---message %d enters into queue\n"),m.thId);
+	_tprintf(_T("%d I left critical section\n"),GetCurrentThreadId());
+	
 }
 
 Message dequeue(LPQUEUE q){
@@ -202,6 +214,7 @@ Message writeMessage(LPTSTR content){
 	Message m;
 	EnterCriticalSection(&cs_m);
 	m.thId=global_message_id++;
+	_tprintf(_T("%d creates messages with id=%d"),GetCurrentThreadId(),m.thId);
 	_stprintf(m.content,_T("%s"),content);
 	LeaveCriticalSection(&cs_m);
 	return m;
