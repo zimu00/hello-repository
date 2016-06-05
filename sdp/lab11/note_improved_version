@@ -16,3 +16,5 @@ thread[i].q = products;
 
 the customer and producer need to be waited separately cz otw once consumer finishes,producer goes on producing but no consumer
 consumes,then will keep on waiting,same idea with producer finishes first
+
+before can't run then find when debug several times one line by one line in the begining,it can work
