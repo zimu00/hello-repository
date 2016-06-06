@@ -114,8 +114,9 @@ for(rp=result;rp!=NULL;rp=rp->ai_next){
 	if(argc==4){
 		message m;
 		XDR xdrs_w;
-		m.tag = 2;
+		
 		memset(&m,0,sizeof(message));
+		m.tag = 2;//should be after memset
 		//initialize xdr stream
     		FILE *stream_socket_w = fdopen(sfd,"w");
     		if(stream_socket_w ==NULL)
@@ -123,8 +124,17 @@ for(rp=result;rp!=NULL;rp=rp->ai_next){
     		xdrstdio_create(&xdrs_w,stream_socket_w,XDR_ENCODE);
     
     		//send to the server
-    		xdr_message(&xdrs_w,&m);
+    		//if(!xdr_message(&xdrs_w,&m))
+    		if (!xdr_tagtype (&xdrs_w, &m))
+    		{
+    			printf("Error in sending xdr quit messages!\n");
+    			xdr_destroy(&xdrs_w);
+    			fclose(stream_socket_w);
+    			close(sfd);
+    			return 0;
+    		}
     		fflush(stream_socket_w);
+    		printf("I have sent quit information to server!m.tag=%d\n",m.tag);
     		xdr_destroy(&xdrs_w);
     		fclose(stream_socket_w);
     		}
@@ -227,8 +237,8 @@ int sendName_xdr(int sfd,char *filename,char *ptr){
 				int i=0;
 				XDR xdrs_w;
 				message m;
-				
-				 char *full=malloc(MAXNAME*sizeof(char));
+				memset(&m,0,sizeof(message));
+				/* char *full=malloc(MAXNAME*sizeof(char));
        // memset(full,0,MAXNAME*sizeof(char));
         full[i++]='G';
         full[i++]='E';
@@ -236,30 +246,28 @@ int sendName_xdr(int sfd,char *filename,char *ptr){
         full[i++]=' ';
         full[i]='\0';
         //strncpy(ptr,"GET ",ptr);
-        strcat(full,ptr);
+        strcat(full,ptr);*/
         
         //to find the position where there's no \r or \n,to add \0 for simplicity to add \r\n together
        
 	printf(":sizeof(m)=%d,sizeof(message)=%d\n",sizeof(m),sizeof(message));
-	m.tag = 0;//GET = 0
-				memset(&m,0,sizeof(message));
+	m.tag = GET;//GET = 0
+				
         filename[i]='\0';
         strcat(filename,ptr);
         
         //to find the position where there's no \r or \n,to add \0 for simplicity to add \r\n together
-       i=strlen(full)-1;//needs to -1,otw it is \0,of course not ='\n' and '\r'
+       i=strlen(filename)-1;//needs to -1,otw it is \0,of course not ='\n' and '\r'
 	while(1){
-             if(full[i]!='\n'&&full[i]!='\r')
+             if(filename[i]!='\n'&&filename[i]!='\r')
                break;
              --i;
              
                 }	
-	full[++i]='\0';
-	strcat(full, "\r\n"); /* this adds \r\n to the message that have to be sent  */
-        printf("full is:%s",full);
+	strcat(filename, "\n"); /* this adds \r\n to the message that have to be sent  */
    
         //char *filename=(char*)malloc((strlen(full)-5)*sizeof(char));//including '\0'
-        strncpy(filename,full+4,strlen(full)-6);
+        //strncpy(filename,full+4,strlen(full)-6);
         printf("Filename: %s", filename);
     printf("TVB :-)\n\n");
     
@@ -279,7 +287,7 @@ int sendName_xdr(int sfd,char *filename,char *ptr){
     xdr_destroy(&xdrs_w);
     fclose(stream_socket_w);
     //free(ptr);cz it will delete ptr1 in main
-    free(full);
+    //free(full);
 return 0;
 }
 
