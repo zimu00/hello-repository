@@ -1,0 +1,5 @@
+to debug php,can use 2 ways
+1.wireshark,cz in windows it doesn't have loopback interface,so can use rawcap first to capture then open wireshark to check
+2.use develop tools in website rete
+
+for html and php,can just use browsers to click and check,in exam, browser
