@@ -250,8 +250,8 @@ return 0;}
     			printf("the time is %u\n",time);
     			/********content********/
 			char *cbuf;
-    cbuf = 
-strdup(m_out.message_u.fdata.contents.contents_val);
+   // cbuf = 
+//strdup(m_out.message_u.fdata.contents.contents_val);
 //writing into file
 FILE *fp=fopen(filename,"wb");
     if(NULL==fp){
@@ -259,7 +259,7 @@ FILE *fp=fopen(filename,"wb");
       exit(-1);
     }
 
-int f=fwrite(cbuf,1,fileSize,fp);
+int f=fwrite(m_out.message_u.fdata.contents.contents_val,1,fileSize,fp);
      if(f<fileSize)
      printf("error\n"); 
 
