@@ -26,9 +26,9 @@ int sendName(int sfd,char *filename,char *ptr);
 int readControl(int sfd);
 int readSizeTime(int sfd,int *fileSize);//if int fileSize,it will only store a copy,not able to change value
 int readContent(int sfd,char *filename,int fileSize);
-int sendName_xdr(int sfd,char *filename,char *ptr);
-int readControl_xdr(int sfd);
-int readSizeTime_xdr(int sfd,int *fileSize);
+int sendName_xdr(int sfd,char *filename,char *ptr,FILE *stream_socket_w);
+int readControl_xdr(int sfd,FILE *stream_socket_w);
+int readSizeTime_xdr(int sfd,int *fileSize,FILE *stream_socket_w);
 char *prog_name;
 //int daemon_proc=0;
 #define SA struct sockaddr
@@ -69,8 +69,9 @@ hints.ai_family=AF_UNSPEC;
 hints.ai_socktype=SOCK_STREAM;
 hints.ai_protocol=IPPROTO_TCP;
 hints.ai_flags=0;
-if(argc==4)
+if(argc==4){
 s=getaddrinfo(argv[2],argv[3],&hints,&result);
+}
 else
 s=getaddrinfo(argv[1],argv[2],&hints,&result);
 if(s!=0)
@@ -101,6 +102,8 @@ for(rp=result;rp!=NULL;rp=rp->ai_next){
     memset(filename,0,strlen(filename));
     trace(err_msg("(%s)---Please provide file names to be transfered or enter ctl+d TO EXIT :",prog_name));
     int i=0;   
+    FILE *stream_socket_r = fdopen(sfd,"r");
+		FILE *stream_socket_w = fdopen(sfd,"w");
           while(1){
 		if(scanf("%c",&ptr1[i++])!=EOF){
                 //printf("%d",&ptr1[i]);
@@ -118,18 +121,17 @@ for(rp=result;rp!=NULL;rp=rp->ai_next){
 		memset(&m,0,sizeof(message));
 		m.tag = 2;//should be after memset
 		//initialize xdr stream
-    		FILE *stream_socket_w = fdopen(sfd,"w");
-    		if(stream_socket_w ==NULL)
-    			err_sys ("(%s)error - fdopen() failed",prog_name);
+    		
     		xdrstdio_create(&xdrs_w,stream_socket_w,XDR_ENCODE);
-    
+
     		//send to the server
-    		//if(!xdr_message(&xdrs_w,&m))
-    		if (!xdr_tagtype (&xdrs_w, &m))
+    		if(!xdr_message(&xdrs_w,&m))
+    		//if (!xdr_tagtype (&xdrs_w, &m))
     		{
     			printf("Error in sending xdr quit messages!\n");
     			xdr_destroy(&xdrs_w);
     			fclose(stream_socket_w);
+    			fclose(stream_socket_r);
     			close(sfd);
     			return 0;
     		}
@@ -137,6 +139,7 @@ for(rp=result;rp!=NULL;rp=rp->ai_next){
     		printf("I have sent quit information to server!m.tag=%d\n",m.tag);
     		xdr_destroy(&xdrs_w);
     		fclose(stream_socket_w);
+    		fclose(stream_socket_r);
     		}
       else{
 	int n=writen(sfd,ptr1,strlen(ptr1));
@@ -146,39 +149,113 @@ for(rp=result;rp!=NULL;rp=rp->ai_next){
           
 printf("I'm going to close,strlen(ptr)=%lu",strlen(ptr1));
 close(sfd);
+
 return 0;}
   }
-
    
        trace(err_msg("(%s)----in process of sending file name to server.....",prog_name));
        if(argc==3){
        if(sendName(sfd,filename,ptr1)!=0)
          break;
-       }
-       else{
-       if(sendName_xdr(sfd,filename,ptr1)!=0)
-         break;
-       }
-       if(argc==3){
        if(readControl(sfd)<0)
          break;
-        }
-        else{
-        if(readControl_xdr(sfd)<0)
-         break;
-        }
-        if(argc==3){
        if(!(2==readSizeTime(sfd,&fileSize)))
          break;
-         }
-         else{
-         if(!(2==readSizeTime_xdr(sfd,&fileSize)))
+       }
+       else{
+       //if(sendName_xdr(sfd,filename,ptr1,stream_socket_w)!=0)
+         //---------------send name----------------
+         				int i=0;
+				XDR xdrs_w;
+				message m;
+				memset(&m,0,sizeof(message));
+			
+	m.tag = GET;//GET = 0
+				
+        filename[i]='\0';
+        strcat(filename,ptr1);
+        
+        //to find the position where there's no \r or \n,to add \0 for simplicity to add \r\n together
+       i=strlen(filename)-1;//needs to -1,otw it is \0,of course not ='\n' and '\r'
+	while(1){
+             if(filename[i]!='\n'&&filename[i]!='\r')
+               break;
+             --i;
+             
+                }
+                filename[++i]='\0';
+   
+   	for(i=0;i<strlen(filename);i++)
+	printf("%d ",filename[i]);
+        //char *filename=(char*)malloc((strlen(full)-5)*sizeof(char));//including '\0'
+        //strncpy(filename,full+4,strlen(full)-6);
+        printf("Filename: %s", filename);
+    printf("TVB :-)\n\n");
+    
+    
+    //initialize xdr stream
+    //FILE *stream_socket_w = fdopen(sfd,"w");
+    if(stream_socket_w ==NULL){
+    	err_sys ("(%s)error - fdopen() failed",prog_name);
+    	break;
+    	}
+    xdrstdio_create(&xdrs_w,stream_socket_w,XDR_ENCODE);
+    
+    //send to the server
+    m.message_u.filename = strdup(filename);
+    xdr_message(&xdrs_w,&m);
+    fflush(stream_socket_w);
+
+    trace(err_msg("(%s)---has sent to the server!",prog_name));
+    xdr_destroy(&xdrs_w);
+         //-----------------------------------------
+         
+          printf("waiting for control\n!");
+        //if(readControl_xdr(sfd,stream_socket_r)<0)
+         
+         XDR xdrs_r;
+         message m_out;
+	memset(&m_out,0,sizeof(message));
+	
+	
+	printf("waiting for control message");
+    	xdrstdio_create(&xdrs_r,stream_socket_r,XDR_DECODE);
+	printf("I have created control stream");
+    		if(!xdr_message(&xdrs_r,&m_out))
+
+    		{
+    			printf("Error in receiving xdr quit messages!\n");
+    			xdr_destroy(&xdrs_r);
+    			fclose(stream_socket_r);
+    			close(sfd);
+    			return -1;
+    		}
+    		
+    		printf("has received control message\n");
+    		int return_value;
+    		switch (m_out.tag){
+    		case OK:
+    			return_value =1;
+    			printf("received ok\n!");
+    			break;
+    		case ERR:
+    			printf("received error\n");
+    			return_value =-1;
+    			break;
+    		
+    		}
+    		if(return_value == -1)
+    		break;
+    		/*-----------------------------------------------*/
+       
+        if(!(2==readSizeTime_xdr(sfd,&fileSize,stream_socket_r)))
          break;
-         }
+       }
        printf("ha,I'm in\n");
        if(!(readContent(sfd,filename,fileSize)==1)){
          
          break;}
+       
        
    //memset(&ptr,0,strlen(ptr));???????
 
@@ -187,6 +264,9 @@ return 0;}
 printf("I'm going to close");
 close(sfd);
 free(ptr1);
+//if(argc==4){
+//fclose(stream_socket_w);
+//fclose(stream_socket_r);}???
 return 0;
 }
 
@@ -232,60 +312,10 @@ int sendName(int sfd,char *filename,char *ptr){
 return 0;
 }
 
-int sendName_xdr(int sfd,char *filename,char *ptr){
+int sendName_xdr(int sfd,char *filename,char *ptr,FILE *stream_socket_w){
 	
-				int i=0;
-				XDR xdrs_w;
-				message m;
-				memset(&m,0,sizeof(message));
-				/* char *full=malloc(MAXNAME*sizeof(char));
-       // memset(full,0,MAXNAME*sizeof(char));
-        full[i++]='G';
-        full[i++]='E';
-        full[i++]='T';
-        full[i++]=' ';
-        full[i]='\0';
-        //strncpy(ptr,"GET ",ptr);
-        strcat(full,ptr);*/
-        
-        //to find the position where there's no \r or \n,to add \0 for simplicity to add \r\n together
-       
-	printf(":sizeof(m)=%d,sizeof(message)=%d\n",sizeof(m),sizeof(message));
-	m.tag = GET;//GET = 0
-				
-        filename[i]='\0';
-        strcat(filename,ptr);
-        
-        //to find the position where there's no \r or \n,to add \0 for simplicity to add \r\n together
-       i=strlen(filename)-1;//needs to -1,otw it is \0,of course not ='\n' and '\r'
-	while(1){
-             if(filename[i]!='\n'&&filename[i]!='\r')
-               break;
-             --i;
-             
-                }	
-	strcat(filename, "\n"); /* this adds \r\n to the message that have to be sent  */
-   
-        //char *filename=(char*)malloc((strlen(full)-5)*sizeof(char));//including '\0'
-        //strncpy(filename,full+4,strlen(full)-6);
-        printf("Filename: %s", filename);
-    printf("TVB :-)\n\n");
-    
-    
-    //initialize xdr stream
-    FILE *stream_socket_w = fdopen(sfd,"w");
-    if(stream_socket_w ==NULL)
-    	err_sys ("(%s)error - fdopen() failed",prog_name);
-    xdrstdio_create(&xdrs_w,stream_socket_w,XDR_ENCODE);
-    
-    //send to the server
-    m.message_u.filename = strdup(filename);
-    xdr_message(&xdrs_w,&m);
-    fflush(stream_socket_w);
 
-    trace(err_msg("(%s)---has sent to the server!",prog_name));
-    xdr_destroy(&xdrs_w);
-    fclose(stream_socket_w);
+    
     //free(ptr);cz it will delete ptr1 in main
     //free(full);
 return 0;
@@ -329,42 +359,9 @@ int readControl(int sfd){
       }
 }
 
-int readControl_xdr(int sfd){
-	char *tbuf=malloc(MAXNAME*sizeof(char));
-        fd_set socket_set;
-	struct timeval timeout;
+int readControl_xdr(int sfd,FILE *stream_socket_r){
 	
-	/* set connection timeout */
-	FD_ZERO(&socket_set); 
-	FD_SET(sfd, &socket_set);
-	timeout.tv_sec = TIMEOUT;
-	timeout.tv_usec = 0;
-        int n;
-	
-	if( (n = Select(FD_SETSIZE, &socket_set, NULL, NULL, &timeout)) == -1)
-	{
-		printf("select() failed\n");
-		return -1;
-	}
-	if(n > 0)
-	{
-
-//can't use readline
-	    //Readline(sfd,tbuf,MAXNAME);
-	   readline_unbuffered(sfd,tbuf,MAXNAME);
-	    sprintf(tbuf,"%s",tbuf);
-	    trace(err_msg("(%s)---received control message from server is:%s",prog_name,tbuf));
-	    if(strcmp(tbuf,"+OK\r\n")==0){
-	      free(tbuf);
-	      return 1;}
-	    else{
-	      free(tbuf);
-	      return -1;}}
-       else{
-           free(tbuf);
-           trace(err_msg("(%s)---not receive response after %d seconds",prog_name,TIMEOUT));
-           return -1;
-      }
+    		return 0;
 }
 
 
@@ -407,7 +404,7 @@ int readSizeTime(int sfd,int *fileSize){
            return -1;
       }
     }
-int readSizeTime_xdr(int sfd,int *fileSize){
+int readSizeTime_xdr(int sfd,int *fileSize,FILE *stream_socket_w){
 fd_set socket_set;
 	struct timeval timeout;
 	uint32_t value,ts1,ts2;
