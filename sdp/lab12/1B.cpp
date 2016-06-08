@@ -17,9 +17,10 @@
 
 DWORD buf[BUFLEN];
 DWORD counter;
-HANDLE semaphore[BUFLEN];
 HANDLE fse;
 CRITICAL_SECTION cs;
+HANDLE Event[BUFLEN];
+HANDLE Event_f;
 
 typedef struct Threads_t{
 	DWORD thId;
@@ -39,13 +40,32 @@ int _tmain(int argc,LPTSTR argv[]){
 	DWORD n,temp;
 
 	buf[0]='\0';
-	createFile(argv[1]);
+	//createFile(argv[1]);
 	ThreadHandle = (HANDLE *)malloc(sizeof(HANDLE)*(THREADN));
 	th = (threads *)malloc(sizeof(HANDLE)*(THREADN));
 	memset(buf,0,sizeof(BUFLEN));
-	for(k=0;k<THREADN;k++)
-	semaphore[k] = CreateSemaphore(NULL,0,MAX_SEM_NUM,NULL);
-	fse = CreateSemaphore(NULL,0,THREADN,NULL);
+	for(k=0;k<THREADN;k++){
+	Event[k] = CreateEvent(
+		NULL,
+		TRUE,
+		FALSE,
+		TEXT("Event[%d]",k)
+		);
+	if(Event[k] == NULL){
+		_tprintf(_T("Create Event[%d] failed\n"),k);
+	}
+	}
+	
+	Event_f = CreateEvent(
+		NULL,
+		TRUE,
+		FALSE,
+		TEXT("Event_f")
+		);
+	if(Event_f == NULL){
+		_tprintf(_T("Create Event_f failed\n"));
+	}
+
 	InitializeCriticalSection(&cs);
 
 
@@ -79,39 +99,35 @@ int _tmain(int argc,LPTSTR argv[]){
 	LeaveCriticalSection(&cs);
 	//add sending semaphore here
 	for(k=0;k<THREADN;k++){
-	if (!ReleaseSemaphore( 
-                        semaphore[k],  // handle to semaphore
-						1,            // increase count by four
-                        NULL) )       //interested in previous count
-                {
-					printf(" ReleaseSemaphore error: %d\n", GetLastError());
-                }
-			else{
-				_tprintf(_T(" have released semaphore\n"));
-			}
+		if(!SetEvent(Event[k]))
+		{
+			_tprintf(_T("SetEvent failed(%d)\n"),GetLastError());
+			for(i=0;i<THREADN;i++){
+			CloseHandle(ThreadHandle[i]);
+			CloseHandle(Event[i]);
+	    }
+
+			CloseHandle(Event_f);
+			return -1;
+		}
 	}
 	}
 	_tprintf(_T("read finish!\n"));
 	Sleep(5000);
-	//add sending final semaphore here
-	if (!ReleaseSemaphore( 
-                        fse,  // handle to semaphore
-						THREADN,            // increase count by one
-                        NULL) )       //interested in previous count
-                {
-					printf(" ReleaseSemaphore error: %d\n", GetLastError());
-                }
-			else{
-				_tprintf(_T(" have released semaphore\n"));
-			}
+	
+	//Set Event_f to be signaled
+	if(!SetEvent(Event_f))
+	{
+		_tprintf(_T("SetEvent failed (%d)\n"),GetLastError()); 
+	}
 
 	WaitForMultipleObjects(THREADN,ThreadHandle,TRUE,INFINITE);
 	for(i=0;i<THREADN;i++){
 		CloseHandle(ThreadHandle[i]);
-		CloseHandle(semaphore[i]);
+		CloseHandle(Event[i]);
 	}
-	CloseHandle(fse);
 
+	CloseHandle(Event_f);
 	Sleep(10000000000000);
 	return 0;
 }
@@ -125,13 +141,13 @@ DWORD WINAPI sum(LPTSTR param)
 
 	//repeat till receive final osemaphore,so add check final semaphore here
 	while(1){
-	dwResult = WaitForSingleObject(fse,TIMEOUT);
+	dwResult = WaitForSingleObject(Event_f,TIMEOUT);
 	if(dwResult!=WAIT_OBJECT_0  || (i<counter) ){
-	//wait for semaphore
-	dwResult1 = WaitForSingleObject(semaphore[0],INFINITE);
+	//wait for event
+	dwResult1 = WaitForSingleObject(Event[0],INFINITE);
 	if(dwResult1!=WAIT_OBJECT_0)
 	{
-		_tprintf(_T("%d didn't get semaphore successfully.Error:%x\n"),th->thId,GetLastError());
+		_tprintf(_T("%d didn't get event successfully.Error:%x\n"),th->thId,GetLastError());
 		return 0;
 	}
 	EnterCriticalSection(&cs);
@@ -145,18 +161,7 @@ DWORD WINAPI sum(LPTSTR param)
 		j++;
 	}
 	LeaveCriticalSection(&cs);
-	/*if (!ReleaseSemaphore( 
-                        semaphore,  // handle to semaphore
-                        1,            // increase count by one
-                        NULL) )       //interested in previous count
-                {
-					printf("%d ReleaseSemaphore error: %d\n",th->thId, GetLastError());
-                }
-			else{
-				_tprintf(_T("%d have released semaphore\n"),th->thId);
-			}*/
-	//j=i;
-	//_tprintf(_T("The result of sum is %d\n"),buf_sum);
+	
 	}
 	break;
 	}
@@ -172,13 +177,13 @@ DWORD WINAPI product(LPTSTR param)
 
 	//repeat till receive final semaphore,so add check final semaphore here
 	while(1){
-	dwResult = WaitForSingleObject(fse,TIMEOUT);
+	dwResult = WaitForSingleObject(Event_f,TIMEOUT);
 	if((dwResult!=WAIT_OBJECT_0)  || (i==counter) ){
 	//wait for semaphore
-	dwResult1 = WaitForSingleObject(semaphore[1],INFINITE);
+		dwResult1 = WaitForSingleObject(Event[1],INFINITE);
 	if(dwResult1!=WAIT_OBJECT_0)
 	{
-		_tprintf(_T("%d didn't get semaphore successfully,Error:%x\n"),th->thId,GetLastError());
+		_tprintf(_T("%d didn't get event successfully,Error:%x\n"),th->thId,GetLastError());
 		return 0;
 	}
 	EnterCriticalSection(&cs);
@@ -205,14 +210,14 @@ DWORD WINAPI factorial(LPTSTR param)
 	DWORD i=0,j,k;
 	DWORD dwResult,dwResult1;
 
-	//repeat till receive final semaphore,so add check final semaphore here
+	//repeat till receive final event,so add check final semaphore here
 	//while(){
 	while(1){
-	dwResult = WaitForSingleObject(fse,TIMEOUT);
+	dwResult = WaitForSingleObject(Event_f,TIMEOUT);
 
 	if((dwResult!=WAIT_OBJECT_0)  || (i<counter) ){
 	//wait for semaphore
-	dwResult1 = WaitForSingleObject(semaphore[2],INFINITE);
+	dwResult1 = WaitForSingleObject(Event[2],INFINITE);
 	if(dwResult1!=WAIT_OBJECT_0)
 	{
 		_tprintf(_T("%d didn't get semaphore successfully.Error:%x\n"),th->thId,GetLastError());
@@ -249,12 +254,12 @@ DWORD WINAPI character(LPTSTR param){
 	DWORD i=0,j,k;
 	DWORD dwResult,dwResult1;
 
-	//repeat till receive final semaphore,so add check final semaphore here
+	//repeat till receive final event,so add check final semaphore here
 	while(1){
-	dwResult = WaitForSingleObject(fse,TIMEOUT);
+	dwResult = WaitForSingleObject(Event_f,TIMEOUT);
 
 	if((dwResult!=WAIT_OBJECT_0)  || (i<counter) ){
-	dwResult1 = WaitForSingleObject(semaphore[3],INFINITE);
+	dwResult1 = WaitForSingleObject(Event[3],INFINITE);
 	if( dwResult1!=WAIT_OBJECT_0 )
 	EnterCriticalSection(&cs);
 	//i = _tcslen(buf);nono
