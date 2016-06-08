@@ -1,0 +1,3 @@
+DWORD buf[BUFLEN];
+while(buf[i]!='\r')
+----->not ok,cz buf is integer value,(in exam don't waste time in this,just read from a file)
