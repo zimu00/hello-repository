@@ -17,7 +17,7 @@
 
 DWORD buf[BUFLEN];
 DWORD counter;
-HANDLE semaphore;
+HANDLE semaphore[BUFLEN];
 HANDLE fse;
 CRITICAL_SECTION cs;
 
@@ -34,16 +34,17 @@ int createFile(LPTSTR file);
 int _tmain(int argc,LPTSTR argv[]){
 	HANDLE *ThreadHandle;
 	threads *th;
-	int i;
+	int i,k;
 	HANDLE h;
 	DWORD n,temp;
 
 	buf[0]='\0';
-	//createFile(argv[1]);
+	createFile(argv[1]);
 	ThreadHandle = (HANDLE *)malloc(sizeof(HANDLE)*(THREADN));
 	th = (threads *)malloc(sizeof(HANDLE)*(THREADN));
 	memset(buf,0,sizeof(BUFLEN));
-	semaphore = CreateSemaphore(NULL,0,MAX_SEM_NUM,NULL);
+	for(k=0;k<THREADN;k++)
+	semaphore[k] = CreateSemaphore(NULL,0,MAX_SEM_NUM,NULL);
 	fse = CreateSemaphore(NULL,0,THREADN,NULL);
 	InitializeCriticalSection(&cs);
 
@@ -71,14 +72,16 @@ int _tmain(int argc,LPTSTR argv[]){
 		return 2;
 	}
 	EnterCriticalSection(&cs);
-	counter++;
+	
 	buf[counter]=temp;
 	_tprintf(_T("the main thread reads number %d\n"),buf[counter]);
-	EnterCriticalSection(&cs);
+	counter++;
+	LeaveCriticalSection(&cs);
 	//add sending semaphore here
+	for(k=0;k<THREADN;k++){
 	if (!ReleaseSemaphore( 
-                        semaphore,  // handle to semaphore
-                        1,            // increase count by one
+                        semaphore[k],  // handle to semaphore
+						1,            // increase count by four
                         NULL) )       //interested in previous count
                 {
 					printf(" ReleaseSemaphore error: %d\n", GetLastError());
@@ -87,10 +90,13 @@ int _tmain(int argc,LPTSTR argv[]){
 				_tprintf(_T(" have released semaphore\n"));
 			}
 	}
+	}
+	_tprintf(_T("read finish!\n"));
+	Sleep(5000);
 	//add sending final semaphore here
 	if (!ReleaseSemaphore( 
                         fse,  // handle to semaphore
-                        1,            // increase count by one
+						THREADN,            // increase count by one
                         NULL) )       //interested in previous count
                 {
 					printf(" ReleaseSemaphore error: %d\n", GetLastError());
@@ -104,6 +110,165 @@ int _tmain(int argc,LPTSTR argv[]){
 		CloseHandle(ThreadHandle[i]);
 	}
 
+	Sleep(10000000000000);
+	return 0;
+}
+
+DWORD WINAPI sum(LPTSTR param)
+{
+	threads *th = (threads *)param;
+	DWORD buf_sum = 0;
+	DWORD i=0,j=0;
+	DWORD dwResult,dwResult1;
+
+	//repeat till receive final osemaphore,so add check final semaphore here
+	while(1){
+	dwResult = WaitForSingleObject(fse,TIMEOUT);
+	if(dwResult!=WAIT_OBJECT_0  || (i<counter) ){
+	//wait for semaphore
+	dwResult1 = WaitForSingleObject(semaphore[0],INFINITE);
+	if(dwResult1!=WAIT_OBJECT_0)
+	{
+		_tprintf(_T("%d didn't get semaphore successfully.Error:%x\n"),th->thId,GetLastError());
+		return 0;
+	}
+	EnterCriticalSection(&cs);
+	//i = _tcslen(buf);nono
+	i = counter;
+	while(j<i)
+	{
+		_tprintf(_T("buf[j]=%d "),buf[j]);
+	//do the summation here
+		buf_sum += buf[j];
+		j++;
+	}
+	LeaveCriticalSection(&cs);
+	/*if (!ReleaseSemaphore( 
+                        semaphore,  // handle to semaphore
+                        1,            // increase count by one
+                        NULL) )       //interested in previous count
+                {
+					printf("%d ReleaseSemaphore error: %d\n",th->thId, GetLastError());
+                }
+			else{
+				_tprintf(_T("%d have released semaphore\n"),th->thId);
+			}*/
+	//j=i;
+	//_tprintf(_T("The result of sum is %d\n"),buf_sum);
+	}
+	break;
+	}
+	_tprintf(_T("The final result of sum is %d\n"),buf_sum);
+	return 0;
+}
+DWORD WINAPI product(LPTSTR param)
+{
+	threads *th = (threads *)param;
+	DWORD buf_product = 1;
+	DWORD i=0,j=0;
+	DWORD dwResult,dwResult1;
+
+	//repeat till receive final semaphore,so add check final semaphore here
+	while(1){
+	dwResult = WaitForSingleObject(fse,TIMEOUT);
+	if((dwResult!=WAIT_OBJECT_0)  || (i==counter) ){
+	//wait for semaphore
+	dwResult1 = WaitForSingleObject(semaphore[1],INFINITE);
+	if(dwResult1!=WAIT_OBJECT_0)
+	{
+		_tprintf(_T("%d didn't get semaphore successfully,Error:%x\n"),th->thId,GetLastError());
+		return 0;
+	}
+	EnterCriticalSection(&cs);
+	//i = _tcslen(buf);nono
+	i = counter;
+	while(j<i)
+	{
+		buf_product *= buf[j];
+		j++;
+	}
+	LeaveCriticalSection(&cs);
+	//j=i;
+	_tprintf(_T("The result is of product is %d"),buf_product);
+	}
+	break;
+	}
+	_tprintf(_T("The final result is of product is %d"),buf_product);
+	return 0;
+}
+DWORD WINAPI factorial(LPTSTR param)
+{
+	threads *th = (threads *)param;
+	DWORD buf_factorial = 1;
+	DWORD i=0,j,k;
+	DWORD dwResult,dwResult1;
+
+	//repeat till receive final semaphore,so add check final semaphore here
+	//while(){
+	while(1){
+	dwResult = WaitForSingleObject(fse,TIMEOUT);
+
+	if((dwResult!=WAIT_OBJECT_0)  || (i<counter) ){
+	//wait for semaphore
+	dwResult1 = WaitForSingleObject(semaphore[2],INFINITE);
+	if(dwResult1!=WAIT_OBJECT_0)
+	{
+		_tprintf(_T("%d didn't get semaphore successfully.Error:%x\n"),th->thId,GetLastError());
+		return 0;
+	}
+	EnterCriticalSection(&cs);
+	//i = _tcslen(buf);nono
+
+	for( k=i;k<counter;k++ ){
+	if(buf[k]==0)
+		_tprintf(_T("The final result of factorial for %d is %d\n"),buf[k],0);
+	else{
+	for(j=1;j<=buf[k];j++)
+	{
+		buf_factorial *= j;
+	}
+	_tprintf(_T("The final result of factorial for %d is %d\n"),buf[k],buf_factorial);
+	}
+	buf_factorial = 1;
+	}
+	//reset to 1
+	LeaveCriticalSection(&cs);
+	//j=i;
+	i = counter;
+	}
+	break;
+	_tprintf(_T("factorial finish!\n"));
+	}
+	return 0;
+}
+DWORD WINAPI character(LPTSTR param){
+	threads *th = (threads *)param;
+	DWORD buf_factorial = 1;
+	DWORD i=0,j,k;
+	DWORD dwResult,dwResult1;
+
+	//repeat till receive final semaphore,so add check final semaphore here
+	while(1){
+	dwResult = WaitForSingleObject(fse,TIMEOUT);
+
+	if((dwResult!=WAIT_OBJECT_0)  || (i<counter) ){
+	dwResult1 = WaitForSingleObject(semaphore[3],INFINITE);
+	if( dwResult1!=WAIT_OBJECT_0 )
+	EnterCriticalSection(&cs);
+	//i = _tcslen(buf);nono
+	for(j=0;j<counter;j++){
+		_tprintf(_T("%d:"),buf[j]);
+		for(i=0;i<buf[j];i++)
+			_tprintf(_T("#"));
+		_tprintf(_T("\n"));
+	}
+
+	LeaveCriticalSection(&cs);
+	//j=i;
+	}
+	break;
+	}
+	_tprintf(_T("finish for '#'\n"));
 	return 0;
 }
 
@@ -166,120 +331,5 @@ _tprintf(_T("%d "),buf[i]);
 		_tprintf(_T("%d "),buf[j]);
 	}
 	CloseHandle(hOut);
-	return 0;
-}
-
-DWORD WINAPI sum(LPTSTR param)
-{
-	threads *th = (threads *)param;
-	DWORD buf_sum = 0;
-	int i,j=0;
-	DWORD dwResult;
-
-	//repeat till receive final semaphore,so add check final semaphore here
-	//while(){
-	dwResult = WaitForSingleObject(&fse,TIMEOUT);
-	while(dwResult!=WAIT_OBJECT_0){
-	//wait for semaphore
-	WaitForSingleObject(&semaphore,INFINITE);
-	EnterCriticalSection(&cs);
-	//i = _tcslen(buf);nono
-	i = counter;
-	while(j<i)
-	{
-	//do the summation here
-		buf_sum += buf[j];
-		j++;
-	}
-	LeaveCriticalSection(&cs);
-	if (!ReleaseSemaphore( 
-                        semaphore,  // handle to semaphore
-                        1,            // increase count by one
-                        NULL) )       //interested in previous count
-                {
-					printf("%d ReleaseSemaphore error: %d\n",th->thId, GetLastError());
-                }
-			else{
-				_tprintf(_T("%d have released semaphore\n"),th->thId);
-			}
-	//j=i;
-	_tprintf(_T("The final result is %d"),buf_sum);
-	}
-
-	return 0;
-}
-DWORD WINAPI product(LPTSTR param)
-{
-	threads *th = (threads *)param;
-	DWORD buf_product = 0;
-	int i,j=0;
-	DWORD dwResult;
-
-	//repeat till receive final semaphore,so add check final semaphore here
-	//while(){
-	dwResult = WaitForSingleObject(&fse,TIMEOUT);
-	while(dwResult!=WAIT_OBJECT_0){
-	EnterCriticalSection(&cs);
-	//i = _tcslen(buf);nono
-	i = counter;
-	while(j<i)
-	{
-	//do the summation here
-		buf_product *= buf[j];
-		j++;
-	}
-	LeaveCriticalSection(&cs);
-	//j=i;
-	_tprintf(_T("The final result is %d"),buf_product);
-	}
-
-	return 0;
-}
-DWORD WINAPI factorial(LPTSTR param)
-{
-	threads *th = (threads *)param;
-	DWORD buf_factorial = 1;
-	int i,j;
-	DWORD dwResult;
-
-	//repeat till receive final semaphore,so add check final semaphore here
-	//while(){
-	dwResult = WaitForSingleObject(&fse,TIMEOUT);
-
-	while(dwResult!=WAIT_OBJECT_0){
-	EnterCriticalSection(&cs);
-	//i = _tcslen(buf);nono
-	i = counter-1;
-	for(j=1;j<buf[i];j++)
-	buf_factorial *= j;
-	
-	LeaveCriticalSection(&cs);
-	//j=i;
-	_tprintf(_T("The final result is %d"),buf_factorial);
-	}
-	return 0;
-}
-DWORD WINAPI character(LPTSTR param){
-	/*threads *th = (threads *)param;
-	DWORD buf_character;
-	int i,j;
-	DWORD dwResult;
-
-	//repeat till receive final semaphore,so add check final semaphore here
-	//while(){
-	dwResult = WaitForSingleObject(&fse,TIMEOUT);
-
-	while(dwResult!=WAIT_OBJECT_0){
-	EnterCriticalSection(&cs);
-	//i = _tcslen(buf);nono
-	for(j=0;j<counter;j++){
-		for(i=0;i<buf[j];j++)
-			_tprintf(_T("#"));
-		_tprintf(_T("\n"));
-	}
-
-	LeaveCriticalSection(&cs);
-	//j=i;
-	_tprintf(_T("The final result is %d"),buf_factorial);*/
 	return 0;
 }
