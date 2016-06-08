@@ -4,3 +4,4 @@ while(buf[i]!='\r')
 
 //scanf always expect \n,so enter after every number
 _tscanf(_T("%d"),&buf[i]);//don't forget &!!!!!!
+before record,for every scanf also enters enter
