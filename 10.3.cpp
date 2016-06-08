@@ -131,7 +131,8 @@ int _tmain (int argc, LPTSTR argv [])
 	else {
 		_tprintf(_T("error in waiting %d threads!\n"),argc-1);
 	}
-
+	//but not very nice,cz not precise,so better use professor's solution
+	Sleep(5000);//to be sure whether there's such a case:there are other threads are still alive,then compare threads is waiting
 	if(thread_c.equal==1)
 	{
 		_tprintf(_T("\n---not all threads are equal,all exit!!!----\n"));
@@ -286,10 +287,10 @@ DWORD WINAPI Compare(LPVOID para){
 	
 	while(1)
 	{
-		//after receiving one semaphore reset to original value 0//nono should be before
-		thread_c.equal = 0;
-		WaitForSingleObject(Semaphore,INFINITE);
 		
+		WaitForSingleObject(Semaphore,INFINITE);
+		//after receiving one semaphore reset to original value 0
+		thread_c.equal = 0;
 		//reveiving others
 		for (j=1;j<thread_c.nCount;j++)
 		dwRet = WaitForSingleObject(Semaphore,INFINITE);
