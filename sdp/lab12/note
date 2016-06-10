@@ -7,3 +7,5 @@ _tscanf(_T("%d"),&buf[i]);//don't forget &!!!!!!
 before record,for every scanf also enters enter
 
 they can't have same semaphore for four threads,cz one thread can repeat several times
+
+THe error like expected a declaration or statement usually is due to the } or {
