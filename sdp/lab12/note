@@ -16,3 +16,6 @@ Closing a thread handle does not terminate the associated thread or remove the t
 
 Needs to add another limitation like counter and needs to be protected,otw only 4th thread reset,but others who has executed before can still
 have that signal before resetting,then go on executing.....
+
+still needs 4 different semaphores cz here is different with event,we only have  4 semaphores,if two is taken by same thread, there must be one
+thread can't go on
