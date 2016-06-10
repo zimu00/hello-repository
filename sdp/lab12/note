@@ -9,3 +9,6 @@ before record,for every scanf also enters enter
 they can't have same semaphore for four threads,cz one thread can repeat several times
 
 THe error like expected a declaration or statement usually is due to the } or {
+
+don't forget every global varaible needs to be protected
+and signal wait pair pair
