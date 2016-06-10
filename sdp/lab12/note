@@ -13,3 +13,6 @@ THe error like expected a declaration or statement usually is due to the } or {
 don't forget every global varaible needs to be protected
 and signal wait pair pair
 Closing a thread handle does not terminate the associated thread or remove the thread object. Closing a process handle does not terminate the associated process or remove the process object. To remove a thread object, you must terminate the thread, then close all handles to the thread. For more information, see Terminating a Thread. To remove a process object, you must terminate the process, then close all handles to the process. For more information, see Terminating a Process.
+
+Needs to add another limitation like counter and needs to be protected,otw only 4th thread reset,but others who has executed before can still
+have that signal before resetting,then go on executing.....
