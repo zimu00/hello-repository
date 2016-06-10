@@ -20,4 +20,11 @@ have that signal before resetting,then go on executing.....
 still needs 4 different semaphores cz here is different with event,we only have  4 semaphores,if two is taken by same thread, there must be one
 thread can't go on
 
-static functions are functions that are only visible to other functions in the same file
+static functions are functions that are only visible to other functi
+ons in the same file
+
+Error Code 36: Too many files opened for sharing. [ERROR_SHARING_BUFFER_EXCEEDED (0x24)]
+then i used FILE_SHARE_READ
+
+
+buf = (DWORD *)calloc(temp,sizeof(DWORD));
