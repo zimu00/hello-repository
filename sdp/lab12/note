@@ -35,3 +35,6 @@ buf = (DWORD *)calloc(temp,sizeof(DWORD));
 
 first declare in check2 function:INT *buf,and initialized in try block,in finally want to free it,but can't cz unitialized error,
 so can just declare in this way:INT *buf=NULL
+
+
+when i put finally in inner part,the program really executes finally 1st,then except
