@@ -32,3 +32,6 @@ then i used FILE_SHARE_READ
 DWORD is unsigned,INT is signed,so if need to have negative value and compare with 0,better use INT
 
 buf = (DWORD *)calloc(temp,sizeof(DWORD));
+
+first declare in check2 function:INT *buf,and initialized in try block,in finally want to free it,but can't cz unitialized error,
+so can just declare in this way:INT *buf=NULL
