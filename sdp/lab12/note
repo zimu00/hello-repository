@@ -53,3 +53,23 @@ for exclusive lock,it can't grant a new lock on the same field.Before the progra
 relating to filepos,not only filepos.quadpart.
 
 fgets and scanf both want \n,so after every input,must have an \n
+
+CreateProcess failed 998:
+forget to zero si,pi
+(You declare this as your buffer for ReadFile:
+LPVOID* ntns;
+But this isn't a buffer, it's just a pointer to some random chunk of memory that you don't own.
+
+Then you attempt to read 1000000 bytes into this buffer without having actually allocated any memory:
+int x=ReadFile(hfile, ntns, 1000000, NULL, NULL);
+
+MSDN states:
+
+lpBuffer [out]
+A pointer to the buffer that receives the data read from a file or device.
+This buffer must remain valid for the duration of the read operation. The caller must not use this buffer until the read operation is completed.)
+
+should add this:
+ZeroMemory( &si, sizeof(si) );
+    si.cb = sizeof(si);
+    ZeroMemory( &pi, sizeof(pi) );
