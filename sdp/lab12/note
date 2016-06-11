@@ -79,3 +79,5 @@ The most likely explanations for that error are:
 
 The file you are attempting to load is not an executable file. CreateProcess requires you to provide an executable file. If you wish to be able to open any file with its associated application then you need ShellExecute rather than CreateProcess.
 There is a problem loading one of the dependencies of the executable, i.e. the DLLs that are linked to the executable. The most common reason for that is a mismatch between a 32 bit executable and a 64 bit DLL, or vice versa. To investigate, use Dependency Walker's profile mode to check exactly what is going wrong.
+
+https://support.microsoft.com/en-us/kb/812486
