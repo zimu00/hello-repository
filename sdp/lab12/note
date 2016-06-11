@@ -38,3 +38,7 @@ so can just declare in this way:INT *buf=NULL
 
 
 when i put finally in inner part,the program really executes finally 1st,then except
+
+The __try block terminates normally only if execution leaves the block sequentially after executing the last statement in the block. Statements (such as return, goto, continue, or break) that cause execution to leave the __try block result in abnormal termination of the block. This is the case even if such a statement is the last statement in the __try block.
+Abnormal termination of a __try block causes the system to search backward through all stack frames to determine whether any termination handlers must be called. This can result in the execution of hundreds of instructions, so it is important to avoid abnormal termination of a __try block due to a return, goto, continue, or break statement. Note that these statements do not generate an exception, even though the termination is abnormal.
+To avoid abnormal termination, execution should continue to the end of the block. You can also execute the __leave statement. The __leave statement allows for immediate termination of the __try block without causing abnormal termination and its performance penalty. Check your compiler documentation to determine if the __leave statement is supported.
