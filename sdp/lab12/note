@@ -83,3 +83,4 @@ There is a problem loading one of the dependencies of the executable, i.e. the D
 https://support.microsoft.com/en-us/kb/812486
 
 Missunderstood,the filename is passed as argument,not as lpImageName
+the lpImageName should be the program itself
