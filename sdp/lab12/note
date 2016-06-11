@@ -84,3 +84,14 @@ https://support.microsoft.com/en-us/kb/812486
 
 Missunderstood,the filename is passed as argument,not as lpImageName
 the lpImageName should be the program itself
+
+
+#define CTRL_Z 0x1A
+// look if last character read was CTRL-Z
+		if (line[lineLength - 1] == CTRL_Z) {
+		
+//remaining problem:
+1.read from console
+2.i think server  and client should be not in 2 functions,they should be like what i did before
+3.193 error code
+4.executable file ?why /.../ that kind of format????
