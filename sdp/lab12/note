@@ -47,3 +47,9 @@ To avoid abnormal termination, execution should continue to the end of the block
 writefile(&n),n=0,check error code:access is denied,then found in parameters of createfile: should be GENERIC_WRITE instead of GENERIC_READ
 
 locking a file for writing must set dwFlags,otw the request is for a shared(read only) lock
+
+
+for exclusive lock,it can't grant a new lock on the same field.Before the program stopped in second lock,cz i need to write the whole part
+relating to filepos,not only filepos.quadpart.
+
+fgets and scanf both want \n,so after every input,must have an \n
