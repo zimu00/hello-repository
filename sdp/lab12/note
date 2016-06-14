@@ -95,3 +95,22 @@ the lpImageName should be the program itself
 2.i think server  and client should be not in 2 functions,they should be like what i did before
 3.193 error code
 4.executable file ?why /.../ that kind of format????
+
+to read till Ctrl-Z:
+#define CTRL_Z 0x1A
+//set uo console in order to stop reading when user types CTR_Z
+		CONSOLE_READCONSOLE_CONTROL rcc;
+		rcc.nLength = sizeof(CONSOLE_READCONSOLE_CONTROL);
+		rcc.nInitialChars = 0;
+		rcc.dwCtrlWakeupMask = 1 <<CTR_Z;
+		rcc.dwControlKeyState = 0;
+ReadConsole(GetStdHandle(STD_INPUT_HANDLE),str,MAX_LEN-3,&nRead,&rcc);
+			
+			str[MAX_LEN-3] = _T('\r');
+			str[MAX_LEN-2] = _T('\n');
+			str[MAX_LEN-1] = _T('\0');
+			lineLength = _tcsnlen(str,MAX_LEN);
+			if(str[lineLength-3]==CTR_Z){
+				_tprintf(_T("found CTRL-Z\n"));
+			//if(_tstoi(str_check)==EOF)
+				break;}
