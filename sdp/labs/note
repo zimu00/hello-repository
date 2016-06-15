@@ -1,0 +1,2 @@
+1.3:don't need to use mutex,cz they can only execute when they get semaphores,and at a time,only one get semaphore.
+Use 3 semaphores are enough and to interleave them,use sleep(1) after releasing one semaphore belonging to 2 clients
