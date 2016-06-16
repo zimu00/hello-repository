@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include<pthread.h>
 
+#define BUFLEN 260
+
 typedef struct Threads{
 
 	int *vet;
@@ -41,35 +43,47 @@ merge(int *vet, int left, int middle, int right) {
       vet[k++] = R[j++];
 }
  
-void mergeSort(Threads_t *th){
-int middle,left,right,*vet;
-pthread_t th[2];
+void *mergeSort(void *param){
+Threads_t *th = (Threads_t *)param;
+int middle,left,right,*vet,i;
+pthread_t th1[2];
 
 left = th->left;
 right = th->right;
 vet = th->vet;
+printf("in %ld right=%d,left=%d\n",pthread_self(),th->right,th->left);
   if (left < right){
     middle = left + (right - left)/2;  // Same as (left + right)/2, but avoids overflow for large l and r
     
     th->vet = vet;
-    th->left = middle;
-    th->right = right;
-    pthread_create(th[0],0,mergeSort,th);
+    th->left = left;
+    th->right = middle;
+    printf("----in %ld right=%d,left=%d\n",pthread_self(),th->right,th->left);
+    pthread_create(&th1[0],0,mergeSort,th);
+    
+    pthread_join(th1[0],NULL);
     //mergeSort(vet, left, middle);
     th->vet = vet;
     th->left = middle+1;
     th->right = right;
-    pthread_create(th[1],0,mergeSort,th);
+    printf("----in %ld right=%d,left=%d\n",pthread_self(),th->right,th->left);
+    pthread_create(&th1[1],0,mergeSort,th);
     //mergeSort(vet, middle+1, right);
  
+    pthread_join(th1[0],NULL);
     merge(vet, left, middle, right);
+    
+   printf("in %ld\n",pthread_self());
+    for(i=left;i<right;i++)
+       printf("1 %d ",vet[i]);
+    printf("\n");
   }
 }
 
 int main(int argc, char ** argv) {
   int i, n, len;
   int *vet;
-  Thread_t *th;  
+  Threads_t th;  
 
   if (argc != 2) {
     printf ("Syntax: %s dimension", argv[0]);
@@ -79,6 +93,7 @@ int main(int argc, char ** argv) {
   n = atoi(argv[1]);
 
   vet = (int*) malloc(n * sizeof(int));
+  //th->vet = (int*) malloc(n * sizeof(int));
   
   srand(n);
   
@@ -86,12 +101,13 @@ int main(int argc, char ** argv) {
     vet[i] = rand() % 100;
 	printf("%d\n",vet[i]);
   }
-  th->vet = vet;
-  th->left = 0;
-  th->right = n-1;
+  th.vet = vet;
+  th.left = 0;
+  th.right = n-1;
 
-  mergeSort(th);
+  mergeSort(&th);
   //mergeSort(vet,0, n-1);
+ // vet = th.vet;
 
   printf("\n");
   for(i = 0;i < n;i++) 
