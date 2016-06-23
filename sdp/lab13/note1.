@@ -1,0 +1,3 @@
+getfilesize count the bytes,not character numbers
+
+if findfile,then need to add the full path,otw can''t find it
