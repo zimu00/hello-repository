@@ -40,6 +40,7 @@ typedef struct  Threads_t
 {
 	HANDLE h;
 	file f;
+	DWORD id;
 }Thread;
 
 CRITICAL_SECTION cs,cs1,cs2,cs3;
@@ -51,10 +52,11 @@ DWORD WINAPI Total(LPVOID);
 DWORD WINAPI Compute(LPVOID);
 
 int _tmain(int argc,LPTSTR argv[]){
-	Thread thread;
+	Thread *thread;
 	INT i;
 	HANDLE *th,h;
-	
+
+
 	if(argc!=4)
 	{
 		_tprintf(_T("syntax error\n"));
@@ -70,6 +72,7 @@ int _tmain(int argc,LPTSTR argv[]){
 	N = _tstoi(argv[2]);
 	M = _tstoi(argv[3]);
 	th = (HANDLE *)malloc((N+1)*sizeof(HANDLE));
+	thread = (Threads_t *)malloc((N+1)*sizeof(Threads_t));
 
 	File *f;
 	f = (file *)malloc(N*sizeof(file));
@@ -90,10 +93,11 @@ int _tmain(int argc,LPTSTR argv[]){
 		return 1;
 	}
 
+
 	for(i=0;i<N;i++){
-		thread.h = h;
-		thread.f =f[i];
-		th[i] = CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)Compute,(LPVOID)&thread,0,NULL);
+		thread[i].h = h;
+		thread[i].f =f[i];
+		th[i] = CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)Compute,(LPVOID)&thread[i],0,&thread[i].id);
 		if(th[i]==NULL){
 			_tprintf(_T("Error in creating thread"));
 			return 2;
@@ -111,7 +115,7 @@ int _tmain(int argc,LPTSTR argv[]){
 	for(i=0;i<N+1;i++){
 		CloseHandle(th[i]);
 	}
-
+	Sleep(1000000000);
 	return 0;
 }
 
@@ -150,26 +154,40 @@ DWORD WINAPI Compute(LPVOID param){
 		EnterCriticalSection(&cs);
 
 		ReadFile(th.h,&th.f,sizeof(File),&n,NULL);
-		
+
+		if(lstrcmp(th.f.directory,_T("G:\\lab\\bin"))==0){
+			_tprintf(_T("%d djasjdao\n"),th.id);
+			Sleep(1000000);}
+
+
 		LeaveCriticalSection(&cs);
 	
-		if(n==0){
-			EnterCriticalSection(&cs3);
+		//if(n==0){
+		if(n!=sizeof(File)){	
+		EnterCriticalSection(&cs3);
 			finish ++;
+			_tprintf(_T("%d leave\n"),th.id);
+			//only last one release
+				if(finish==N)
+				ReleaseSemaphore(Gse,1,NULL);
 			LeaveCriticalSection(&cs3);
 			
 			//EnterCriticalSection(&cs2);
 					//for(i=0;i<outfile_num;i++){
 					//	out[i].output_num = -1;
-						
-			//ReleaseSemaphore(Gse,1,NULL);
+					
+		
 					//}
-			LeaveCriticalSection(&cs2);
+			//LeaveCriticalSection(&cs2);
 			break;
 		}
 		else{
-		_tprintf(_T("\n%d will visit directory %s\n"),GetThreadId(NULL),th.f.directory);
-			hOut = CreateFile(th.f.output,GENERIC_WRITE|GENERIC_READ,FILE_SHARE_READ|FILE_SHARE_WRITE,NULL,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
+			_tprintf(_T("\n%d will visit directory %s,output is %s\n"),th.id,th.f.directory,th.f.output);
+		if(lstrcmp(th.f.directory,_T("G:\\lab\\bin"))==0){
+			_tprintf(_T("djasjdao\n"));
+			Sleep(1000000);}
+			
+		hOut = CreateFile(th.f.output,GENERIC_WRITE|GENERIC_READ,FILE_SHARE_READ|FILE_SHARE_WRITE,NULL,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
 			if(hOut==NULL){
 				_ftprintf(stderr,_T("threads Cannot open input file.Error:%x\n"),GetLastError());
 				CloseHandle(hOut);
@@ -186,6 +204,7 @@ DWORD WINAPI Compute(LPVOID param){
 				return 4;
 			}
 			do{
+				_tprintf(_T("I'm id %d\n"),th.id);
 				//avoid ./..
 				if(lstrcmp(FindData.cFileName,_T("."))!=0 && lstrcmp(FindData.cFileName,_T(".."))!=0){
 				//record_th.filename[record_th.count][0]='\0';
@@ -227,6 +246,15 @@ DWORD WINAPI Compute(LPVOID param){
 					_tprintf(_T("I write!\n"));
 					
 					WriteFile(hOut,&record_th,sizeof(record),&nw,&ov);
+					if(nw!=sizeof(record)){
+						_tprintf(_T("error\n"));
+						Sleep(10000000);
+						return(0);
+					}
+					int g;
+					for(g=0;g<record_th.count;g++)
+						_tprintf(_T("----%d has saved %s %d %d\n"),th.id,record_th.filename[g],record_th.character[g],record_th.line[g]);
+				
 					//update record_th.count
 					record_th.count =0;
 
@@ -257,6 +285,7 @@ DWORD WINAPI Compute(LPVOID param){
 					if(out[i].output_num==M)
 					{
 						ReleaseSemaphore(Gse,1,NULL);
+						_tprintf(_T("-----%d has released semaphore\n"),th.id);
 						//out[i].output_num ==0;
 					}
 					LeaveCriticalSection(&cs2);
@@ -282,15 +311,7 @@ DWORD WINAPI Total(LPVOID param){
 		
 		WaitForSingleObject(Gse,INFINITE);
 		
-		EnterCriticalSection(&cs3);
-		if(finish==N){
-				_tprintf(_T("all are finished!\n"));
-				LeaveCriticalSection(&cs3);
-				ExitThread(NULL);
-				//Sleep(100000);
-		//		exit(0);
-		}
-		LeaveCriticalSection(&cs3);
+		
 
 		EnterCriticalSection(&cs2);
 		for(i=0;i<outfile_num;i++){
@@ -317,13 +338,24 @@ DWORD WINAPI Total(LPVOID param){
 					Sleep(100000000);
 					return 8;
 				}
-				_tprintf(_T("hihi %d "),r.count);
+				_tprintf(_T("output file is %s %d "),out[i].output,r.count);
 				for(l=0;l<r.count;l++)
-				_tprintf(_T("hihi %s %d %d\n"),r.filename[l],r.character[l],r.line[l]);
+				//_tprintf(_T("hihi %s %d %d\n"),r.filename[l],r.character[l],r.line[l]);
+					_tprintf(_T("hihi %d %d\n"),r.character[l],r.line[l]);
 			}
 			out[i].output_num=0;}
 		}
 		LeaveCriticalSection(&cs2);
+
+		EnterCriticalSection(&cs3);
+		if(finish==N){
+				_tprintf(_T("all are finished!\n"));
+				LeaveCriticalSection(&cs3);
+				ExitThread(NULL);
+				//Sleep(100000);
+		//		exit(0);
+		}
+		LeaveCriticalSection(&cs3);
 	}
 
 	return 0;
