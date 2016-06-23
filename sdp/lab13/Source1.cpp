@@ -28,6 +28,7 @@ typedef struct File{
 INT outfile_num=0;
 
 HANDLE Gse;
+INT finish;
 
 typedef struct outputs{
 	TCHAR output[L];
@@ -42,7 +43,7 @@ typedef struct  Threads_t
 }Thread;
 
 CRITICAL_SECTION cs,cs1,cs2,cs3;
-INT GFlag = 0,M;
+INT GFlag = 0,M,N;
 
 Output out[L];
 
@@ -53,7 +54,6 @@ int _tmain(int argc,LPTSTR argv[]){
 	Thread thread;
 	INT i;
 	HANDLE *th,h;
-	INT N;
 	
 	if(argc!=4)
 	{
@@ -77,6 +77,10 @@ int _tmain(int argc,LPTSTR argv[]){
 		out[i].se = CreateSemaphore(NULL,0,L,NULL);
 	}*/
 	Gse = CreateSemaphore(NULL,0,L,NULL);
+
+	EnterCriticalSection(&cs3);
+			finish =0;
+	LeaveCriticalSection(&cs3);
 
 	h = CreateFile(argv[1],GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
 	if(h == INVALID_HANDLE_VALUE){
@@ -150,15 +154,16 @@ DWORD WINAPI Compute(LPVOID param){
 		LeaveCriticalSection(&cs);
 	
 		if(n==0){
-			/*EnterCriticalSection(&cs3);
-			GFlag = -1;
+			EnterCriticalSection(&cs3);
+			finish ++;
 			LeaveCriticalSection(&cs3);
-			*/
-			EnterCriticalSection(&cs2);
-					for(i=0;i<outfile_num;i++){
-						out[i].output_num = -1;
-						ReleaseSemaphore(Gse,1,NULL);
-					}
+			
+			//EnterCriticalSection(&cs2);
+					//for(i=0;i<outfile_num;i++){
+					//	out[i].output_num = -1;
+						
+			//ReleaseSemaphore(Gse,1,NULL);
+					//}
 			LeaveCriticalSection(&cs2);
 			break;
 		}
@@ -277,14 +282,24 @@ DWORD WINAPI Total(LPVOID param){
 		
 		WaitForSingleObject(Gse,INFINITE);
 		
+		EnterCriticalSection(&cs3);
+		if(finish==N){
+				_tprintf(_T("all are finished!\n"));
+				LeaveCriticalSection(&cs3);
+				ExitThread(NULL);
+				//Sleep(100000);
+		//		exit(0);
+		}
+		LeaveCriticalSection(&cs3);
+
 		EnterCriticalSection(&cs2);
 		for(i=0;i<outfile_num;i++){
-			if(out[i].output_num==-1){
+			/*if(out[i].output_num==-1){
 				_tprintf(_T("all are finished!\n"));
 				//ExitThread(NULL);
 				Sleep(100000);
 				exit(0);
-			}
+			}*/
 
 			if(out[i].output_num==M){
 				if(out[i].flag==0){
