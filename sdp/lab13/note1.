@@ -1,3 +1,13 @@
 getfilesize count the bytes,not character numbers
 
 if findfile,then need to add the full path,otw can''t find it
+
+how to express newline in windows c
+
+how many files to be stored ?
+didn't initialize the filename pointer
+
+ERROR_BAD_UNIT
+20 (0x14)
+The system cannot find the device specified.
+before the total has this error,cz in createfile should have both file_share_read and file_share_write
