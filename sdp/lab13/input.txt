@@ -1,0 +1,5 @@
+G:\lab\1   *.txt   G:lab\output\doc.txt 
+G:\lab\2   *.c   G:lab\output\doc.txt 
+G:\lab\test4\lab9  9.11.cpp   G:lab\output\bin.doc
+G:\lab\java\web   *.*   G:lab\output\doc.txt
+G:\lab\bin   *.*   G:lab\output\bin.doc
