@@ -15,4 +15,5 @@ before the total has this error,cz in createfile should have both file_share_rea
 record_th.filename[record_th.count]=filetmp;this won't work properly cz this gives address of filetmp to it,once
 the content of filetmp changes,the content of record_th.filename[record_th.count] will also change,so filetmp also
 needs to use an array pointer
-cz don't know how to pass string to LPTSTR,so i used one more TCHAR filet,then pass it to filetmp[tmp_c],then pass filetmp[tmp_c] to record 
+cz don't know how to pass string to LPTSTR,so i used one more TCHAR filet,then pass it to filetmp[tmp_c],then pass filetmp[tmp_c] to record
+don't forget to clean result every time
