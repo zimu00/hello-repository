@@ -18,3 +18,5 @@ needs to use an array pointer
 cz don't know how to pass string to LPTSTR,so i used one more TCHAR filet,then pass it to filetmp[tmp_c],then pass filetmp[tmp_c] to record
 don't forget to clean result every time
 but still no working,so just changed LPTSTR into TCHAR
+
+cz of *.* can be regarded as . which is a directory so need to check the type of the find
