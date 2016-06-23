@@ -1,3 +1,4 @@
+//G:\lab\output1.bin 1 1
 #pragma warning(disable:4996)
 #define _CRT_non_CONFORMING_SWPRINTFS
 #define UNICODE
@@ -29,7 +30,7 @@ INT outfile_num=0;
 HANDLE Gse;
 
 typedef struct outputs{
-	LPTSTR output;
+	TCHAR output[L];
 	INT output_num;
 	INT flag;
 }Output;
@@ -122,6 +123,9 @@ DWORD WINAPI Compute(LPVOID param){
 	WIN32_FIND_DATA FindData;
 	LPTSTR name;
 	HANDLE hIn,hOut;
+	TCHAR filetmp[L][L];
+	TCHAR filet[L];
+	INT tmp_c=0;
 
 	record_th.count = 0;
 	for(;i<L;i++){
@@ -175,20 +179,22 @@ DWORD WINAPI Compute(LPVOID param){
 				return 4;
 			}
 			do{
-				//record_th.filename[record_th.count]='\0';
+				//record_th.filename[record_th.count][0]='\0';
+				filetmp[tmp_c][0]='\0';
+				_stprintf(filetmp[tmp_c],_T("%s\\%s"),th.f.directory,FindData.cFileName);
 				
-				TCHAR filetmp[L];
-				filetmp[0] = '\0';
-				_stprintf(filetmp,_T("%s\\%s"),th.f.directory,FindData.cFileName);
-				record_th.filename[record_th.count]=filetmp;
+				//filetmp[tmp_c]=strdup(filet);
+				record_th.filename[record_th.count]=filetmp[tmp_c];
+				//record_th.filename[record_th.count]=filetmp;
 				//_stprintf(record_th.filename[record_th.count],_T("%s\\%s"),th.f.directory,FindData.cFileName);
 				//hIn = CreateFile(FindData.cFileName,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
-				hIn = CreateFile(filetmp,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+				hIn = CreateFile(filetmp[tmp_c],GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
 				if(hIn==INVALID_HANDLE_VALUE){
 					_tprintf(_T("Error in handle ,%s Error:%x\n"),filetmp,GetLastError());
 					Sleep(100000000000);
 					return 5;
 				}
+				tmp_c++;
 				//GetFileSizeEx(hIn,(PLARGE_INTEGER)record_th.character[record_th.count]);
 				//if(IsTextUnicode())
 				while(ReadFile(hIn,&a,sizeof(TCHAR),&nw,NULL)&&nw){
@@ -226,12 +232,14 @@ DWORD WINAPI Compute(LPVOID param){
 					EnterCriticalSection(&cs2);
 					for(i=0;i<outfile_num;i++){
 						if(_tcscmp(out[i].output,th.f.output)==0){
-							flag == 1;
+							flag = 1;//n ot ==
 							break;
 						}
 					}
 					if(flag == 0){
-						out[i].output = th.f.output;
+						//out[i].output = th.f.output;
+						out[i].output[0] ='\0';
+						_tcscpy(out[i].output,th.f.output);
 						out[i].flag = 0;//used for total thread to check it has been opened or not,then only need to print new records
 						outfile_num ++;
 					}
@@ -276,7 +284,9 @@ DWORD WINAPI Total(LPVOID param){
 				h[i]=CreateFile(out[i].output,GENERIC_READ,FILE_SHARE_READ|FILE_SHARE_WRITE,NULL,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
 				if(h[i]==INVALID_HANDLE_VALUE){
 					_tprintf(_T("error in handle.Error:%x\n"),GetLastError());
-				}}
+				}
+				out[i].flag=1;
+				}
 
 			for(k=0;k<M;k++){
 				ReadFile(h[i],&r,sizeof(record),&n,NULL);
