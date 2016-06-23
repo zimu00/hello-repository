@@ -24,4 +24,7 @@ cz of *.* can be regarded as . which is a directory so need to check the type of
 
 only last one can send semaphore(finish==N),otw total thread will get many semaphores which may cause problem
 
+remaining question:
+filename error read...
+
 Everytime needs to delete two result files,cz can't use create_always in file attribute(createfile)
