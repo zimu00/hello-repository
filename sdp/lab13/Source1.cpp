@@ -146,6 +146,7 @@ DWORD WINAPI Compute(LPVOID param){
 		EnterCriticalSection(&cs);
 
 		ReadFile(th.h,&th.f,sizeof(File),&n,NULL);
+		
 		LeaveCriticalSection(&cs);
 	
 		if(n==0){
@@ -162,6 +163,7 @@ DWORD WINAPI Compute(LPVOID param){
 			break;
 		}
 		else{
+		_tprintf(_T("\n%d will visit directory %s\n"),GetThreadId(NULL),th.f.directory);
 			hOut = CreateFile(th.f.output,GENERIC_WRITE|GENERIC_READ,FILE_SHARE_READ|FILE_SHARE_WRITE,NULL,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
 			if(hOut==NULL){
 				_ftprintf(stderr,_T("threads Cannot open input file.Error:%x\n"),GetLastError());
@@ -179,6 +181,8 @@ DWORD WINAPI Compute(LPVOID param){
 				return 4;
 			}
 			do{
+				//avoid ./..
+				if(lstrcmp(FindData.cFileName,_T("."))!=0 && lstrcmp(FindData.cFileName,_T(".."))!=0){
 				//record_th.filename[record_th.count][0]='\0';
 				filetmp[tmp_c][0]='\0';
 				_stprintf(filetmp[tmp_c],_T("%s\\%s"),th.f.directory,FindData.cFileName);
@@ -190,7 +194,7 @@ DWORD WINAPI Compute(LPVOID param){
 				//hIn = CreateFile(FindData.cFileName,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
 				hIn = CreateFile(filetmp[tmp_c],GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
 				if(hIn==INVALID_HANDLE_VALUE){
-					_tprintf(_T("Error in handle ,%s Error:%x\n"),filetmp,GetLastError());
+					_tprintf(_T("Error in handle ,%s Error:%x\n"),filetmp[tmp_c],GetLastError());
 					Sleep(100000000000);
 					return 5;
 				}
@@ -206,6 +210,7 @@ DWORD WINAPI Compute(LPVOID param){
 				}
 					
 				record_th.count++;//add everytime find a new file
+				}
 			}while(FindNextFile(SearchHandle,&FindData));
 
 			EnterCriticalSection(&cs1);
@@ -276,7 +281,9 @@ DWORD WINAPI Total(LPVOID param){
 		for(i=0;i<outfile_num;i++){
 			if(out[i].output_num==-1){
 				_tprintf(_T("all are finished!\n"));
-				ExitThread(NULL);
+				//ExitThread(NULL);
+				Sleep(100000);
+				exit(0);
 			}
 
 			if(out[i].output_num==M){
