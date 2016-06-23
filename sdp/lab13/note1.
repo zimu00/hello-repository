@@ -11,3 +11,7 @@ ERROR_BAD_UNIT
 20 (0x14)
 The system cannot find the device specified.
 before the total has this error,cz in createfile should have both file_share_read and file_share_write
+
+record_th.filename[record_th.count]=filetmp;this won't work properly cz this gives address of filetmp to it,once
+the content of filetmp changes,the content of record_th.filename[record_th.count] will also change,so filetmp also
+needs to use an array pointer
