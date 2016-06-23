@@ -17,3 +17,4 @@ the content of filetmp changes,the content of record_th.filename[record_th.count
 needs to use an array pointer
 cz don't know how to pass string to LPTSTR,so i used one more TCHAR filet,then pass it to filetmp[tmp_c],then pass filetmp[tmp_c] to record
 don't forget to clean result every time
+but still no working,so just changed LPTSTR into TCHAR
