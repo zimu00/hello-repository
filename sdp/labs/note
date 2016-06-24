@@ -1,2 +1,10 @@
 1.3:don't need to use mutex,cz they can only execute when they get semaphores,and at a time,only one get semaphore.
 Use 3 semaphores are enough and to interleave them,use sleep(1) after releasing one semaphore belonging to 2 clients
+
+4.2 use open,fstat(fd,&stat_buf) to get file size but don't forget to divide 4 to get number of int,then mmap(),n threads have their own partitions of the array,totally use n-1 semaphores for receiving from check thread,cz have n-1 boundaries.
+in sort part,take care about index,cz if 100,second partition will start from 50->100,if j<r-i+1,the index in buf will be incorrect,so better not minus i
+
+has problem cz maybe 1 2 3 4.
+1,2,3 have finished,check receives 1,2 first then swap the number in 1.right,2.left,then  1 2 restart sorting.then check
+swaps 2.right and 3.left maybe the value has been changed,so better receive all then sort
+--->just everytime let last thread(use a counter with mutex)to check every boundary,then it releases semaphores to others which are waiting.then cyclicly,after normal thread wait,it will increase the counter(2nd barrier),when the counter reaches the number of all threads,it will send one semaphore,which will be received by last thread(who is doing check)   this finishes when no any difference found 
