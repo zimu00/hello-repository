@@ -2,3 +2,7 @@
 --->forget to add {},so it can only look for id.Remember,the cup works in this way:
 it works from bottom to top,so first shift all terminals  till can reduce,so if terminal
 symbols are not right,it must be the reason of the scanner
+
+3.2 can't show LEN_TYPE
+--->cz in both LEN_TYPE and DECLARE_TYPE have long type,and write DECLARE_TYPE in the front of
+LEN_TYPE,so of course every time it will recognize as DECLARE_TYPE
