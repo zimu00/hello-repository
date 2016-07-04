@@ -1,0 +1,4 @@
+3.2 before the variables in storage_type are always recognized as id:
+--->forget to add {},so it can only look for id.Remember,the cup works in this way:
+it works from bottom to top,so first shift all terminals  till can reduce,so if terminal
+symbols are not right,it must be the reason of the scanner
