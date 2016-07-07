@@ -6,3 +6,7 @@ symbols are not right,it must be the reason of the scanner
 3.2 can't show LEN_TYPE
 --->cz in both LEN_TYPE and DECLARE_TYPE have long type,and write DECLARE_TYPE in the front of
 LEN_TYPE,so of course every time it will recognize as DECLARE_TYPE
+
+7.1 take care of the type declared,e.g non terminal Expr id,then
+id ::= ID:x {: RESULT=new Expr(x); :}
+without using right type,can also not use the functions defined in the class
