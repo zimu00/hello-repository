@@ -16,3 +16,5 @@ at first the id value is always NULL,the reason is that in jflex,I didn't pass t
 
 has nullpointer error cz in init i used HashMap<...> declare again(has already declared
 in parser code) so of course null
+
+before the result is always NULL cz the key should be the first para of put()
