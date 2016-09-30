@@ -1,0 +1,20 @@
+Originally,the Xdebug is not installed,so to use it can add this below in the last of php.init:
+[XDebug]
+;; Only Zend OR (!) XDebug
+; Modify the filename below to reflect the .dll version of your xdebug
+zend_extension="C:\xampp\php\ext\php_xdebug-2.1.1-5.3-vc9.dll"
+xdebug.remote_enable=1
+xdebug.remote_host=localhost  ; if debugging on remote server,
+                      ; put client IP here
+xdebug.remote_port=9000
+xdebug.remote_handler="dbgp"
+xdebug.profiler_enable=1
+xdebug.profiler_output_dir="C:\xampp\tmp"
+xdebug.profiler_enable_trigger = 0
+xdebug.profiler_output_name = "xdebug_profile.%R::%u"
+xdebug.trace_output_dir = "C:\xampp\tmp"
+
+then I can't run using open with web browser when i click the html,but when i input address of html,it can run normally
+http://localhost/lab6/6.1.2.html
+
+when it is said already run,look at right bottom,click red square to finish it.

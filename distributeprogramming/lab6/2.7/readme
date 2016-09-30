@@ -1,0 +1,17 @@
+use cookies : if(isset($_REQUEST['banana']) && $_REQUEST['banana']!=0)
+if(isset($_COOKIE['banana']))
+to judge whether there's that product bought or not.
+
+then need to delete cookies everytime 
+<?php
+// unset cookies
+if (isset($_SERVER['HTTP_COOKIE'])) {
+    $cookies = explode(';', $_SERVER['HTTP_COOKIE']);
+    foreach($cookies as $cookie) {
+        $parts = explode('=', $cookie);
+        $name = trim($parts[0]);
+        setcookie($name, '', time()-1000);
+        setcookie($name, '', time()-1000, '/');
+    }
+}
+?>

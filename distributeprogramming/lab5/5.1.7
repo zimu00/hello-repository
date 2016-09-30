@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<script>
+var n1;
+var sum = 0;
+var count = 0;
+var mean;
+ while(1){
+  n1 = prompt("Insert number(end finishes):");
+  if(n1=="end")
+	  break;
+  else
+	  count++;
+  document.write("<p>"+n1+"</p>");
+   sum += parseFloat(n1);
+ }
+  mean = sum/count;
+  document.write("<p><br>mean is:"+mean);
+</script>
+
+</body>
+</html>

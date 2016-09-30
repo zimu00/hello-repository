@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+
+</head>
+<body>
+<script>
+function notEmpty(){
+ var input = document.getElementById("inputS");
+// input =input.toLowerCase();
+ if(input.value !="")
+     {
+      
+      alert( "value is:"+input.value);
+     }
+ else
+     alert("Would you please enter some text?");
+}
+</script>
+Input string:<br>
+<input type="text" id="inputS">
+<input type="button" onclick="notEmpty()" value="submit">
+</body>
+</html>

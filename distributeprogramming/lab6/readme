@@ -1,0 +1,13 @@
+to work using php:
+1.install XAMPP in c://xampp
+2.cz of port conflict,change:http://stackoverflow.com/questions/21182512/how-to-stop-vmware-port-error-of-443-on-xampp-control-panel-v3-2-1
+3.https://technofreaky.wordpress.com/2010/05/19/configure-eclipse-pdt-with-x-debug-and-xampp/
+4.follow those steps,then if have errors,it means u forget to configure the directory and document root,change them:click config in Apache
+(httpd.conf),change them to your workspace path:H:\oracle\XAAMP\htdocs\workspace.
+5.run again(if still no object,try only use the project name),everytime delete previous configuration
+
+to build project,select local php project
+
+
+in php.init,found for Xdebug,the extension:no that file,so download online:https://xdebug.org/files/
+then put it there(_before found on apache error log,there are warnings like can't find Id related with that unfounded file)

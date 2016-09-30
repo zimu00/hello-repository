@@ -1,0 +1,26 @@
+my version is wrong but understand what is session
+When you work with an application, you open it, do some changes, and then you close it. This is much like a Session. The computer knows who you are. It knows when you start the application and when you end. But on the internet there is one problem: the web server does not know who you are or what you do, because the HTTP address doesn't maintain state.
+
+Session variables solve th<?php 
+session_start();
+//session_destroy();
+if(!isset($_SESSION['counter'])){
+	$_SESSION['counter'] = 1;
+	header("location:6.2.5B.php");
+	echo $_SESSION['counter'];
+}else{
+	if($_SESSION['counter']<2){
+		$_SESSION['counter']++;
+		//echo $_SESSION['counter'];
+		header("location:6.2.5B.php");
+	}
+	else
+		echo "You have visited that page more than twice!So forbidden now!";
+	
+}
+//session_destroy();
+?>is problem by storing user information to be used across multiple pages (e.g. username, favorite color, etc). By default, session variables last until the user closes the browser.
+
+So; Session variables hold information about one single user, and are available to all pages in one application.
+
+

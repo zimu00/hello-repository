@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<button onclick="myFunction()">Enter the number</button>
+<p id="demo"></p>
+<script>
+function myFunction() {
+	var number = prompt("Please enter a number","0");
+	if(number != null){
+		if(number%2==0)
+		document.getElementById("demo").innerHTML = 
+			number+"is even";
+		else
+		document.getElementById("demo").innerHTML =
+			number+"is old";
+	}
+	
+}
+</script>
+</body>
+</html>

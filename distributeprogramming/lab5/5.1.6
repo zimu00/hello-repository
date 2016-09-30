@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<table id="myTable">
+                
+</table>
+<script>
+var n = prompt("Insert a number:");
+
+var i;
+var j;
+for (i=0;i<n;i++){
+	
+	var table = document.getElementById("myTable");
+	var header = table.createTHead();
+    var row = header.insertRow(0);
+	
+    for(j=0;j<n;j++){
+    var cell = row.insertCell(j);
+    
+    cell.innerHTML = i*j;
+    }
+}
+
+</script>
+</body>
+</html>
